@@ -1,0 +1,10 @@
+#include "lmn_map.h"
+
+void lmn_map_init(lmn_map_t* map, const lmn_map_type_t type) {
+  switch (type) {
+    case LMM_MAP_HASH_OPEN_ADDRESSING:
+    case LMM_MAP_HASH_CLOSED_ADDRESSING:
+    default:
+      return;
+  }
+}

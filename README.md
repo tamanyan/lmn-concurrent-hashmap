@@ -1,7 +1,7 @@
-LmnConcurrentHashMap
+LmnConcurrentMap
 ===========
 
-C library of concurrent hash tables with high performance for parallel model checking
+C library of concurrent maps (hash tables, trees) with high performance for parallel model checking
 
 ## How to build
     

@@ -5,4 +5,4 @@ liblmn_hashmap_a_CFLAGS = \
 						  $(CFLAGS)
 
 liblmn_hashmap_a_SOURCES = \
-						   hashmap.c	hashmap.h
+						   lmn_map.c	lmn_map.h
