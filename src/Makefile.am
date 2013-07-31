@@ -7,8 +7,8 @@ benchmark_LDFLAGS = -L./map
 
 benchmark_CFLAGS =  -I ./map
 
-benchmark_DEPENDENCIES = ./map/liblmn_hashmap.a
+benchmark_DEPENDENCIES = ./map/liblmn_map.a
 
-benchmark_LDADD = -llmn_hashmap
+benchmark_LDADD = -llmn_map
 
 benchmark_SOURCES = main.c

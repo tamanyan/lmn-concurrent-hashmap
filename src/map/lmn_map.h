@@ -1,19 +1,23 @@
-/*
- * $Id$
- */
-#ifndef MAP_H
-#  define MAP_H
+/**
+ * License GPL3
+ * @file   lmn_map.h
+ * @brief  abstract map structure
+ * @author Taketo Yoshida
+*/
+#ifndef LMN_MAP_H
+#  define LMN_MAP_H
 
-typedef unsigned key_t;
-typedef void*    instance_t;
+#include "lmn_map_util.h"
+
+typedef void*    lmn_instance_t;
 
 typedef struct {
-  instance_t   instance;
-  int          (*find)(instance_t, key_t);
-  int          (*put)(instance_t, key_t, void* data);
-  void         (*init)(instance_t);
-  void         (*free)(instance_t);
-}lmn_map_t;
+  lmn_instance_t   instance;
+  int              (*find)(lmn_instance_t, lmn_key_t);
+  int              (*put)(lmn_instance_t, lmn_key_t, lmn_data_t);
+  void             (*init)(lmn_instance_t);
+  void             (*free)(lmn_instance_t);
+} lmn_map_t;
 
 typedef enum {
   LMM_MAP_HASH_OPEN_ADDRESSING = 0,
@@ -24,4 +28,4 @@ typedef enum {
 void lmn_map_init(lmn_map_t* , const lmn_map_type_t);
 
 
-#endif /* ifndef MAP_H */
+#endif /* ifndef LMN_MAP_H */

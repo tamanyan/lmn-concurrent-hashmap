@@ -1,3 +1,9 @@
+/**
+ * License GPL3
+ * @file   main.c
+ * @brief  main program
+ * @author Taketo Yoshida
+*/
 #include <stdio.h>
 #include "map/lmn_map.h"
 
