@@ -1,9 +1,9 @@
-SlimHashMap
+LmnConcurrentHashMap
 ===========
 
 C library of concurrent hash tables with high performance for parallel model checking
 
-## How to install
+## How to build
     
     $ autoreconf -i
     $ ./configure
