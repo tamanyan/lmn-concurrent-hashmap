@@ -1,2 +1,2 @@
-bin_PROGRAMS = smap
-smap_SOURCES = benchmark.cpp
+SUBDIRS = src
+DIST_SUBDIRS = $(SUBDIRS)
