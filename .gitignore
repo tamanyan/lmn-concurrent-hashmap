@@ -10,6 +10,7 @@
 *.so
 *.so.*
 *.dylib
+*.Po
 
 # Executables
 *.exe
@@ -18,3 +19,20 @@
 
 *.log
 *.un~
+
+tags
+
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.h
+config.status
+configure
+depcomp
+install-sh
+missing
+src/.deps/
+compile
+src/benchmark
+stamp-h1

@@ -2,15 +2,17 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([SlimHashMap], [1.0.0], [tamanyan.sss@gmail.com])
+AC_INIT([LmnConcurrentHashMap], [1.0.0], [tamanyan.sss@gmail.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/benchmark.cpp])
+AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
+AM_PROG_CC_C_O
+AC_PROG_RANLIB
 
 # Checks for libraries.
 
@@ -25,4 +27,5 @@ AC_C_CONST
 # Checks for library functions.
 
 AC_OUTPUT(Makefile \
+          src/map/Makefile
           src/Makefile)
