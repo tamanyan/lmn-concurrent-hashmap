@@ -22,6 +22,7 @@ typedef struct {
 typedef enum {
   LMM_MAP_HASH_OPEN_ADDRESSING = 0,
   LMM_MAP_HASH_CLOSED_ADDRESSING,
+  LMN_MAP_HOPSCOTCH,
   LMN_HAP_COUNT
 } lmn_map_type_t;
 

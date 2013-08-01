@@ -10,7 +10,7 @@
 #include "lmn_map_util.h"
 
 typedef struct {
-  unsigned long    volatile hop_info;
+  unsigned long   volatile hop_info;
   unsigned long   volatile hash;
   lmn_key_t       volatile key;
   lmn_data_t      volatile data;
@@ -32,6 +32,10 @@ typedef struct {
   lmn_hopch_segment_t*  volatile segments;
   lmn_hopch_bucket_t*   volatile buckets;
 } lmn_hopch_hashmap_t;
+
+void        lmn_hopch_hashmap_init(lmn_hopch_hashmap_t*);
+lmn_data_t  lmn_hopch_hashmap_put(const lmn_hopch_hashmap_t*, const lmn_key_t, const lmn_data_t);
+lmn_data_t  lmn_hopch_hashmap_find(const lmn_hopch_hashmap_t*, const lmn_key_t);
 
 #endif /* ifndef LMN_HOPSCOTCH_HASHMAP_H */
 

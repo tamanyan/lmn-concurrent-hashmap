@@ -19,6 +19,7 @@
 
 *.log
 *.un~
+*.swp
 
 tags
 
@@ -36,3 +37,5 @@ src/.deps/
 compile
 src/benchmark
 stamp-h1
+COPYING
+INSTALL
