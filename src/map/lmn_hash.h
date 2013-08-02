@@ -9,7 +9,9 @@
 
 #include "lmn_map_util.h"
 
-typedef unsigned long lmn_hash_t;
+typedef lmn_word lmn_hash_t;
+#define LMN_HASH_EMPTY 0
+#define LMN_HASH_BUSY  1
 
 inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 #ifdef __x86_64__
@@ -32,6 +34,10 @@ inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 
 inline int lmn_hash_eq(lmn_hash_t h1, lmn_hash_t h2) {
   return h1 == h2;
+}
+
+inline int lmn_hash_key_eq(lmn_hash_t key1, lmn_hash_t key2) {
+  return key1 == key2;
 }
 
 #endif /* ifndef LMN_HASH_H */
