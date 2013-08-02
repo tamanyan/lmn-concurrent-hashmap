@@ -3,11 +3,12 @@
  * @file   lmn_hopscotch_hashmap.h
  * @brief  hopscotch hash table implementation
  * @author Taketo Yoshida
-*/
+ */
 #ifndef LMN_HOPSCOTCH_HASHMAP_H
 #  define LMN_HOPSCOTCH_HASHMAP_H
 
 #include "lmn_map_util.h"
+#include "lmn_hash.h"
 
 typedef struct {
   unsigned long   volatile hop_info;
