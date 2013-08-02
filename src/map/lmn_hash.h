@@ -1,5 +1,4 @@
 /**
- * License GPL3
  * @file   lmn_hash.h
  * @brief  hash
  * @author Taketo Yoshida

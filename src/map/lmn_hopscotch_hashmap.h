@@ -1,5 +1,4 @@
 /**
- * License GPL3
  * @file   lmn_hopscotch_hashmap.h
  * @brief  hopscotch hash table implementation
  * @author Taketo Yoshida

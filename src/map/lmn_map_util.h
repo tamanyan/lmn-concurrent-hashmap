@@ -1,13 +1,13 @@
 /**
- * License GPL3
  * @file   lmn_map_util.h
  * @brief  common definition
  * @author Taketo Yoshida
-*/
+ */
 #ifndef LMN_MAP_UTIL_H
 #  define LMN_MAP_UTIL_H
 
 #include <stdlib.h>
+#include <pthread.h>
 
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_CAST(type, value)        (value)type

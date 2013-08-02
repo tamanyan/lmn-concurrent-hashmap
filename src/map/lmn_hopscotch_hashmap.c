@@ -1,5 +1,4 @@
 /**
- * License GPL3
  * @file   lmn_hopscotch_hashmap.c
  * @brief  hopscotch hash table implementation
  * @author Taketo Yoshida
@@ -86,7 +85,7 @@ void lmn_hopch_hashmap_free(lmn_hopch_hashmap_t *map) {
 lmn_data_t lmn_hopch_hashmap_put(lmn_hopch_hashmap_t *map, const lmn_key_t key, const lmn_data_t data) {
   lmn_hash_t hash               = lmn_hash_calc(key);
   lmn_hopch_segment_t *segment  = &map->segments[(hash >> map->segment_shift) & map->segment_mask];
-  /* TODO
+  /* TODO:
    * require segment lock
    */
   lmn_hopch_bucket_t *start_bucket = &map->buckets[hash & map->bucket_mask]; 
@@ -100,7 +99,7 @@ lmn_data_t lmn_hopch_hashmap_put(lmn_hopch_hashmap_t *map, const lmn_key_t key, 
       i   = get_first_lsb_bit_index(hop_info);
       cur = start_bucket + i;
       if (hash == cur->hash && key == cur->key) {
-        /* TODO
+        /* TODO:
          * require segment unlock
          */
         return cur->data;

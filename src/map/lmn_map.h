@@ -1,5 +1,4 @@
 /**
- * License GPL3
  * @file   lmn_map.h
  * @brief  abstract map structure
  * @author Taketo Yoshida
