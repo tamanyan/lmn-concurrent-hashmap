@@ -18,7 +18,7 @@ inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
   key ^= (key <<  6);
   key ^= (key >> 12);
   key ^= (key <<  4) + (key << 28);
-  key ^= (key >> 32);
+  key ^= (key >> 31);
 #else
   key ^= (key << 15) ^ 0xcd7dcd7d;
   key ^= (key >> 10);
