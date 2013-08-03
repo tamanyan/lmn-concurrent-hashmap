@@ -9,8 +9,10 @@
 #include "lmn_map_util.h"
 
 typedef lmn_word lmn_hash_t;
-#define LMN_HASH_EMPTY 0
-#define LMN_HASH_BUSY  1
+#define LMN_HASH_EMPTY      0
+#define LMN_HASH_BUSY       1
+#define LMN_HASH_EMPTY_DATA 0
+#define LMN_HASH_EMPTY_KEY  0
 
 inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 #ifdef __x86_64__

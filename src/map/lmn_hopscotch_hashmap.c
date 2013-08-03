@@ -57,6 +57,62 @@ inline int dump_map(lmn_hopch_hashmap_t *map) {
   dbgprint("buckets : %p\nsegments : %p\n", map->buckets, map->segments);
 }
 
+void find_closer_free_bucket(lmn_hopch_hashmap_t *map, const lmn_hopch_segment_t *start_segment, lmn_hopch_bucket_t **free_bucket, int *free_distance) {
+  lmn_hopch_bucket_t *move_bucket = *free_bucket - (LMN_HOPCH_HOP_RANGE - 1);
+  lmn_hopch_segment_t *move_segment;
+  u32 move_free_dist, move_new_free_distance, mask, i;
+  lmn_word start_hop_info;
+  for (move_free_dist = LMN_HOPCH_HOP_RANGE - 1; move_free_dist > 0; --move_free_dist) {
+    start_hop_info         = move_bucket->hop_info;
+    move_new_free_distance = -1;
+    mask                   = 1;
+    for (i = 0; i < move_free_dist; ++i, mask <<= 1) {
+      if (mask & start_hop_info) {
+        move_new_free_distance = i;
+        break;
+      }
+    }
+    if (move_new_free_distance != -1) {
+      move_segment = &map->segments[((move_bucket - map->buckets) >> map->segment_shift ) & map->segment_mask];
+      
+      if (start_segment != move_segment) {
+        /* TODO:
+         * require segment lock
+         */
+      }
+
+      if (start_hop_info == move_bucket->hop_info) {
+        lmn_hopch_bucket_t *new_free_bucket = move_bucket + move_new_free_distance;
+        (*free_bucket)->data = new_free_bucket->data;
+        (*free_bucket)->key  = new_free_bucket->key;
+        (*free_bucket)->hash = new_free_bucket->hash;
+
+        ++(move_segment->timestamp);
+
+        move_bucket->hop_info |= (1U << move_free_dist);
+        move_bucket->hop_info &= ~(1U << move_new_free_distance);
+
+        *free_bucket    = new_free_bucket;
+        *free_distance -= move_free_dist;
+        if(start_segment != move_segment) {
+          /* TODO:
+           * require segment unlock
+           */
+        }
+        return;
+      }
+      if(start_segment != move_segment) {
+        /* TODO:
+         * require segment unlock
+         */
+      }
+    }
+    ++move_bucket;
+  }
+  *free_bucket  = NULL;
+  *free_distance = 0;
+}
+
 /**
  * public functions
  */
@@ -85,15 +141,18 @@ void lmn_hopch_hashmap_free(lmn_hopch_hashmap_t *map) {
 lmn_data_t lmn_hopch_hashmap_put(lmn_hopch_hashmap_t *map, const lmn_key_t key, const lmn_data_t data) {
   lmn_hash_t hash               = lmn_hash_calc(key);
   lmn_hopch_segment_t *segment  = &map->segments[(hash >> map->segment_shift) & map->segment_mask];
+  int i;
   /* TODO:
    * require segment lock
    */
   lmn_hopch_bucket_t *start_bucket = &map->buckets[hash & map->bucket_mask]; 
+  lmn_word hop_info = start_bucket->hop_info;
 
+  if (key == 0x2000) {
+    dbgprint("exist key : %lu, hash : %lu, data : %p\n",key, hash, data);
+  }
   // check if aready contain
   {
-    lmn_word hop_info = start_bucket->hop_info;
-    int i;
     lmn_hopch_bucket_t *cur;
     while (hop_info != 0) {
       i   = get_first_lsb_bit_index(hop_info);
@@ -102,6 +161,7 @@ lmn_data_t lmn_hopch_hashmap_put(lmn_hopch_hashmap_t *map, const lmn_key_t key, 
         /* TODO:
          * require segment unlock
          */
+        dbgprint("exist key : %lu, hash : %lu, data : %p\n",key, hash, data);
         return cur->data;
       }
       // next setting bit
@@ -117,9 +177,27 @@ lmn_data_t lmn_hopch_hashmap_put(lmn_hopch_hashmap_t *map, const lmn_key_t key, 
       if (free_bucket->hash == LMN_HASH_EMPTY && LMN_CAS(&(free_bucket->hash), LMN_HASH_EMPTY, LMN_HASH_BUSY))
         break;
     }
-    dbgprint("0x%lu\n", free_bucket->hash);
+
+    if (free_distance < LMN_HOPCH_INSERT_RANGE) {
+      do {
+        if (free_distance < LMN_HOPCH_HOP_RANGE) {
+          free_bucket->data     = data;
+          free_bucket->key      = key;
+          free_bucket->hash     = hash;
+          free_bucket->hop_info |= (1U << free_distance);
+          dbgprint("insert key : %lu, hash : %lu, data : %p\n",key, hash, data);
+          /* TODO:
+           * require segment unlock
+           */
+          return data;
+        }
+      } while (free_bucket != 0);
+    }
   }
-  return NULL;
+
+  fprintf(stderr, "ERROR - RESIZE is not implemented");
+  exit(1);
+  return LMN_HASH_EMPTY_DATA;
 }
 
 lmn_data_t lmn_hopch_hashmap_find(const lmn_hopch_hashmap_t *map, const lmn_key_t key) {

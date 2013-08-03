@@ -21,7 +21,7 @@ typedef struct {
   lmn_word   volatile lock;
 } lmn_hopch_segment_t;
 
-#define LMN_HOPCH_RAHGE             64
+#define LMN_HOPCH_HOP_RANGE         64
 #define LMN_HOPCH_INSERT_RANGE      4096
 #define LMN_HOPCH_RESIZE_FACTOR     2
 
