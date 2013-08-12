@@ -7,12 +7,14 @@
 #  define LMN_MAP_UTIL_H
 
 #include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_CAST(type, value)        (value)type
 
 #define lmn_malloc(size, type)       (type*)malloc(sizeof(type)*(size))
+#define lmn_free(ptr)                free(ptr);
 
 #define DEBUG 1
 
