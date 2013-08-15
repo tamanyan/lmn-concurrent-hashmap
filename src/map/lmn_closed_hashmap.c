@@ -1,5 +1,4 @@
 /**
- * License GPL3
  * @file   lmn_closed_hashmap.c
  * @brief  
  * @author Taketo Yoshida
