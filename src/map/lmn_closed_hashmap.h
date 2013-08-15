@@ -13,12 +13,12 @@ typedef struct {
   lmn_word      volatile hash;
   lmn_key_t     volatile key;
   lmn_data_t    volatile data;
-} lmn_closed_bucket_t;
+} lmn_closed_entry_t;
 
 typedef struct {
   lmn_word               volatile bucket_mask;
   lmn_word               volatile size;
-  lmn_closed_bucket_t**  volatile buckets;
+  lmn_closed_entry_t**   volatile tbl;
 } lmn_closed_hashmap_t;
 
 void lmn_closed_init(lmn_closed_hashmap_t* map);

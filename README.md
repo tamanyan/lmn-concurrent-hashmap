@@ -16,3 +16,13 @@ C library of concurrent hashmaps with high performance for parallel model checki
     $ ./configure
     $ make
 
+## Contents
+
+1. Lock Based ChainHash (Close Addressing)
+2. Lock Free ChainHash (Close Addressing)
+3. Lock Based ClosedHash (Open Addressing)
+4. Lock Free ClosedHash (Open Addressing)
+
+## How to use
+     
+     $ ./benchmark [-a algorithm_name] [-c insert_count] [-n number_of_thread] 
