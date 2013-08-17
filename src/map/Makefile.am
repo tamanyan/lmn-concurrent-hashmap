@@ -2,8 +2,8 @@ noinst_LIBRARIES = liblmn_map.a
 liblmn_map_a_CFLAGS = \
 					  	  -std=c99          \
 						  -I../             	\
-						  -I../map		     		\
-						  $(CFLAGS)
+							$(CFLAGS) 					\
+						  -I../map		     	
 
 liblmn_map_a_SOURCES = \
 						   lmn_map_util.h																		\

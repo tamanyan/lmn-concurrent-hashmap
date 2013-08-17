@@ -7,6 +7,14 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 
+
+#if test -z $CFLAGS; then
+#    CXFLAGS='-O2'
+#fi
+OPTIMIZER_CFLAGS="-O2"
+OPTIMIZER_CXXFLAGS="-O2"
+
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC

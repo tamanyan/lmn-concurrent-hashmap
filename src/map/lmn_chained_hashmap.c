@@ -30,15 +30,6 @@ void lmn_chained_print_map(lmn_chained_hashmap_t *map) {
   dbgprint("======================================================================\n", NULL);
 }
 
-inline lmn_chained_entry_t** lmn_chained_find_free_entry(lmn_chained_hashmap_t *map, lmn_key_t key) {
-  lmn_hash_t hash           = lmn_hash_calc(key);
-  lmn_chained_entry_t** ent = &map->tbl[hash & map->bucket_mask];
-  while (*ent != LMN_HASH_EMPTY) {
-    (*ent) = ((*ent)->next);
-  }
-  return ent;
-}
-
 void lmn_chained_rehash(lmn_chained_hashmap_t *map) {
   int i;
   lmn_word                new_size = map->bucket_mask + 1;

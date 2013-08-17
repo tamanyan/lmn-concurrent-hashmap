@@ -10,7 +10,7 @@
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
 
-#define MAX_KEY 1000000
+#define MAX_KEY 2000000
 
 int main(int argc, char **argv){
 
@@ -33,7 +33,7 @@ int main(int argc, char **argv){
   printf("start benchmark\n");
 
   srand((unsigned) time(NULL));
-  for(int i = 0;i < 10;i++) {
+  for(int i = 0;i < MAX_KEY;i++) {
     array[i] = rand(); 
   }
 
