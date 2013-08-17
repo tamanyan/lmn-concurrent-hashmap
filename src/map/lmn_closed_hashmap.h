@@ -21,6 +21,23 @@ typedef struct {
   lmn_closed_entry_t**   volatile tbl;
 } lmn_closed_hashmap_t;
 
+#define lmn_closed_foreach(map, ent, code) \
+  {                                                           \
+    int __i;                                                  \
+    for (__i = 0; __i < ((map)->bucket_mask + 1); __i++) {    \
+      (ent) = (map)->tbl[__i];                                \
+      if ((ent) != LMN_HASH_EMPTY) {                          \
+        (code);                                               \
+      }                                                       \
+    }                                                         \
+  }
+
+#define lmn_closed_free(map, ent, code) \
+  {                                      \
+    lmn_closed_foreach(map, ent, code);  \
+    lmn_free((map)->tbl);                \
+  }
+
 void lmn_closed_init(lmn_closed_hashmap_t* map);
 lmn_data_t lmn_closed_find(lmn_closed_hashmap_t *map, lmn_key_t key);
 void lmn_closed_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data);

@@ -10,7 +10,7 @@
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
 
-#define MAX_KEY 2000000
+#define MAX_KEY 1000
 
 int main(int argc, char **argv){
 
@@ -50,6 +50,10 @@ int main(int argc, char **argv){
   }
   end = clock();
   printf("closed hash map find time:%lfs\n", (double)(end - start)/CLOCKS_PER_SEC);
+  lmn_closed_entry_t *ent1;
+  lmn_closed_free(&closed_map, ent1, ({
+    lmn_free(ent1)      
+  }));
 
   lmn_chained_hashmap_t chained_map;
   lmn_chained_init(&chained_map);
@@ -67,6 +71,11 @@ int main(int argc, char **argv){
   }
   end = clock();
   printf("chained hash map find time:%lfs\n", (double)(end - start)/CLOCKS_PER_SEC);
+
+  lmn_chained_entry_t *ent2;
+  lmn_chained_free(&chained_map, ent2, ({
+    lmn_free(ent2)      
+  }));
 	return 0;
 }
 

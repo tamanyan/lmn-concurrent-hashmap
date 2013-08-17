@@ -14,6 +14,7 @@
 #define LMN_CAST(type, value)        (value)type
 
 #define lmn_malloc(size, type)       (type*)malloc(sizeof(type)*(size))
+#define lmn_calloc(size, type)       (type*)calloc((size), sizeof(type))
 #define lmn_free(ptr)                free(ptr);
 
 #define DEBUG 1

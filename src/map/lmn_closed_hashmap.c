@@ -25,7 +25,7 @@ void lmn_closed_rehash(lmn_closed_hashmap_t *map) {
   int i;
   lmn_word            new_size = map->bucket_mask + 1;
   lmn_word            old_size = new_size;
-  lmn_closed_entry_t **new_tbl = lmn_malloc(new_size <<= 2, lmn_closed_entry_t*);
+  lmn_closed_entry_t **new_tbl = lmn_calloc(new_size <<= 2, lmn_closed_entry_t*);
   lmn_word                hash;
   lmn_closed_entry_t **old_tbl = map->tbl;
   lmn_closed_hashmap_t tmp_map;
@@ -53,7 +53,7 @@ void lmn_closed_rehash(lmn_closed_hashmap_t *map) {
  */
 void lmn_closed_init(lmn_closed_hashmap_t *map) {
   //map->tbl         = (lmn_closed_entry_t**)malloc(sizeof(lmn_closed_entry_t*) * LMN_CLOSED_INIT_SIZE);
-  map->tbl          = lmn_malloc(LMN_CLOSED_INIT_SIZE, lmn_closed_entry_t*);
+  map->tbl          = lmn_calloc(LMN_CLOSED_INIT_SIZE, lmn_closed_entry_t*);
   map->bucket_mask  = LMN_CLOSED_INIT_SIZE - 1;
   map->size         = 0;
   memset(map->tbl, 0x00, LMN_CLOSED_INIT_SIZE);

@@ -34,13 +34,12 @@ void lmn_chained_rehash(lmn_chained_hashmap_t *map) {
   int i;
   lmn_word                new_size = map->bucket_mask + 1;
   lmn_word                old_size = new_size;
-  lmn_chained_entry_t    **new_tbl = lmn_malloc(new_size <<= 2, lmn_chained_entry_t*);
+  lmn_chained_entry_t    **new_tbl = lmn_calloc(new_size <<= 2, lmn_chained_entry_t*);
   lmn_chained_entry_t    **old_tbl = map->tbl;
   lmn_chained_entry_t  *ent, *next;
   lmn_hash_t                bucket;
   lmn_word         new_bucket_mask = new_size - 1;
 
-  memset(new_tbl, 0x00, sizeof(lmn_chained_entry_t*)*new_size);
   dbgprint("rehash start old_size:%d\n", old_size);
   // lmn_chained_print_map(map);
   for (i = 0; i < old_size; i++) {
@@ -65,7 +64,7 @@ void lmn_chained_rehash(lmn_chained_hashmap_t *map) {
  */
 
 void lmn_chained_init(lmn_chained_hashmap_t* map) {
-  map->tbl              = lmn_malloc(LMN_CHAINED_INIT_SIZE, lmn_chained_entry_t*);
+  map->tbl              = lmn_calloc(LMN_CHAINED_INIT_SIZE, lmn_chained_entry_t*);
   map->bucket_mask      = LMN_CHAINED_INIT_SIZE - 1;
   map->size             = 0;
   memset(map->tbl, 0x00, LMN_CHAINED_INIT_SIZE);

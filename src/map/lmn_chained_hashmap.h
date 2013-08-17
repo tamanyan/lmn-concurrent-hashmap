@@ -22,6 +22,27 @@ typedef struct {
   lmn_chained_entry_t**  volatile tbl;
 } lmn_chained_hashmap_t;
 
+#define lmn_chained_foreach(map, ent, code)             \
+  {                                                           \
+    int __i;                                                  \
+    lmn_chained_entry_t *__next;                              \
+    for (__i = 0; __i < ((map)->bucket_mask + 1); __i++) {    \
+      (ent) = (map)->tbl[__i];                                \
+      while ((ent) != LMN_HASH_EMPTY) {                       \
+        __next = (ent)->next;                                 \
+        (code);                                               \
+        (ent) = __next;                                       \
+      }                                                       \
+    }                                                         \
+  }
+
+#define lmn_chained_free(map, ent, code) \
+  {                                       \
+    lmn_chained_foreach(map, ent, code);  \
+    lmn_free((map)->tbl);                 \                          
+  }
+
+
 void lmn_chained_init(lmn_chained_hashmap_t* map);
 lmn_data_t lmn_chained_find(lmn_chained_hashmap_t *map, lmn_key_t key);
 void lmn_chained_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t data);
