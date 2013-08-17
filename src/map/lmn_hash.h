@@ -8,7 +8,7 @@
 
 #include "lmn_map_util.h"
 
-typedef lmn_word lmn_hash_t;
+typedef u32 lmn_hash_t;
 #define LMN_HASH_EMPTY      0
 #define LMN_HASH_BUSY       1
 #define LMN_HASH_EMPTY_DATA 0
@@ -16,12 +16,18 @@ typedef lmn_word lmn_hash_t;
 
 inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 #ifdef __x86_64__
-  key ^= (key << 30) ^ 0xcd7dcd7dcd7dcd7d;
-  key ^= (key >> 20);
-  key ^= (key <<  6);
+  /* Robert Jenkins' 32 bit Mix Function */
+  key += (key << 12);
+  key ^= (key >> 22);
+  key += (key << 4);
+  key ^= (key >> 9);
+  key += (key << 10);
+  key ^= (key >> 2);
+  key += (key << 7);
   key ^= (key >> 12);
-  key ^= (key <<  4) + (key << 28);
-  key ^= (key >> 31);
+
+  /* Knuth's Multiplicative Method */
+  key = (key >> 3) * 2654435761;
 #else
   key ^= (key << 15) ^ 0xcd7dcd7d;
   key ^= (key >> 10);
