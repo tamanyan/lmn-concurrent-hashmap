@@ -41,6 +41,7 @@ typedef struct {
 void lmn_closed_init(lmn_closed_hashmap_t* map);
 lmn_data_t lmn_closed_find(lmn_closed_hashmap_t *map, lmn_key_t key);
 void lmn_closed_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data);
+void lmn_closed_free_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data);
 
 #endif /* ifndef LMN_CLOSED_HASHMAP_H */
 

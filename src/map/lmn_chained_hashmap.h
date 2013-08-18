@@ -49,6 +49,8 @@ typedef struct {
 void lmn_chained_init(lmn_chained_hashmap_t* map);
 lmn_data_t lmn_chained_find(lmn_chained_hashmap_t *map, lmn_key_t key);
 void lmn_chained_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t data);
+lmn_data_t lmn_chained_free_find(lmn_chained_hashmap_t *map, lmn_key_t key);
+void lmn_chained_free_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t data);
 
 #endif /* ifndef LMN_CHAINED_HASHMAP_H */
 

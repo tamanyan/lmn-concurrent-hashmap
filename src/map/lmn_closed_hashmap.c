@@ -39,7 +39,6 @@ void lmn_closed_rehash(lmn_closed_hashmap_t *map) {
     ent = old_tbl[i];
     if (ent != LMN_HASH_EMPTY) {
       hash          = lmn_closed_find_bucket(&tmp_map, ent->key);
-      ent->hash     = hash;
       new_tbl[hash] = ent;
     }
   }
@@ -72,15 +71,37 @@ lmn_data_t lmn_closed_find(lmn_closed_hashmap_t *map, lmn_key_t key) {
 }
 
 void lmn_closed_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
-  lmn_hash_t           hash = lmn_closed_find_bucket(map, key);
-  lmn_closed_entry_t **ent = &map->tbl[hash];
+  lmn_hash_t        bucket = lmn_closed_find_bucket(map, key);
+  lmn_closed_entry_t **ent = &map->tbl[bucket];
   //dbgprint("put %lu %lu\n", key, data);
   if ((*ent) != LMN_HASH_EMPTY) {
     (*ent)->data = data;
   } else {
     (*ent) = lmn_malloc(1, lmn_closed_entry_t);
     (*ent)->key  = key;
-    (*ent)->hash = hash;
+    (*ent)->data = data;
+    map->size++;
+    if (map->size > map->bucket_mask * 0.75) {
+      lmn_closed_rehash(map);
+    }
+  }
+}
+
+void lmn_closed_free_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
+  lmn_hash_t        bucket = lmn_closed_find_bucket(map, key);
+  lmn_closed_entry_t **ent = &map->tbl[bucket];
+  lmn_closed_entry_t *new_ent;
+  //dbgprint("put %lu %lu\n", key, data);
+  if ((*ent) != LMN_HASH_EMPTY) {
+    (*ent)->data = data;
+  } else {
+    new_ent = lmn_malloc(1, lmn_closed_entry_t);
+    if (!LMN_CAS(&(*ent), NULL, new_ent)) {
+      lmn_free(new_ent);
+      lmn_closed_free_put(map, key, data);
+      return ;
+    }
+    (*ent)->key  = key;
     (*ent)->data = data;
     map->size++;
     if (map->size > map->bucket_mask * 0.75) {
