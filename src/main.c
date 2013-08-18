@@ -21,7 +21,7 @@ double gettimeofday_sec(){
   return (double)t.tv_sec + (double)t.tv_usec * 1e-6;
 }
 
-#define MAX_KEY (200000 * HASHMAP_SEGMENT)
+#define MAX_KEY (300000 * HASHMAP_SEGMENT)
 
 typedef struct {
   lmn_chained_hashmap_t  *map;
@@ -105,7 +105,7 @@ int main(int argc, char **argv){
   double  start, end;
   lmn_data_t         data;
   int              result;
-  int      array[MAX_KEY];
+  int              *array;
 
   char      algrithm[128] = {0};
   int               count = 1;
@@ -139,6 +139,7 @@ int main(int argc, char **argv){
     strcpy(algrithm, ALG_NAME_LOCK_CHAINED_HASHMAP);
   }
   srand((unsigned) time(NULL));
+  array = malloc(sizeof(int) * MAX_KEY);
   for(int i = 0;i < MAX_KEY;i++) {
     array[i] = rand(); 
   }
