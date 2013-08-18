@@ -3,6 +3,7 @@
  * @brief  main program
  * @author Taketo Yoshida
  */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -15,7 +16,7 @@
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
 
-#define MAX_KEY (150000 * HASHMAP_SEGMENT)
+#define MAX_KEY (200000 * HASHMAP_SEGMENT)
 
 typedef struct {
   lmn_chained_hashmap_t  *map;
@@ -39,7 +40,8 @@ void *thread_chained_free(void* arg) {
   int                    seg = (MAX_KEY / targ->thread_num);
   int                 offset = seg * id;
   lmn_data_t            data;
-  printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+
+  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
   for (int i = offset; i < offset + seg; i++) {
     lmn_chained_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_chained_free_find(map, (lmn_key_t)array[i]);
@@ -47,7 +49,7 @@ void *thread_chained_free(void* arg) {
       printf("not same data\n");
     }
   } 
-  printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
 }
 
 void *thread_chained(void* arg) {
@@ -58,7 +60,7 @@ void *thread_chained(void* arg) {
   int                    seg = (MAX_KEY / targ->thread_num);
   int                 offset = seg * id;
   lmn_data_t            data;
-  printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
   for (int i = offset; i < offset + seg; i++) {
     lmn_chained_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_chained_find(map, (lmn_key_t)array[i]);
@@ -66,7 +68,7 @@ void *thread_chained(void* arg) {
       printf("not same data\n");
     }
   } 
-  printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
 }
 
 void *thread_closed_free(void* arg) {
@@ -77,7 +79,7 @@ void *thread_closed_free(void* arg) {
   int                    seg = (MAX_KEY / targ->thread_num);
   int                 offset = seg * id;
   lmn_data_t            data;
-  printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
   for (int i = offset; i < offset + seg; i++) {
     lmn_closed_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_closed_find(map, (lmn_key_t)array[i]);
@@ -85,7 +87,7 @@ void *thread_closed_free(void* arg) {
       printf("not same data\n");
     }
   } 
-  printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
 }
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
@@ -95,7 +97,8 @@ void *thread_closed_free(void* arg) {
 
 int main(int argc, char **argv){
 
-  clock_t      start, end;
+  struct timespec  start, end;
+  double elapsed;
   lmn_data_t         data;
   int              result;
   int      array[MAX_KEY];
@@ -142,7 +145,7 @@ int main(int argc, char **argv){
     lmn_chained_hashmap_t chained_map;
     lmn_chained_init(&chained_map);
 
-    start = clock();
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &chained_map;
       param[i].array = array;
@@ -153,8 +156,10 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    end = clock();
-    printf("chained hash map put find time:%lfs\n", (double)(end - start)/CLOCKS_PER_SEC);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec);
+    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
+    printf("chained hash map put find time:%lfs\n", elapsed);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -165,7 +170,7 @@ int main(int argc, char **argv){
     lmn_chained_hashmap_t chained_map;
     lmn_chained_init(&chained_map);
 
-    start = clock();
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &chained_map;
       param[i].array = array;
@@ -176,8 +181,10 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    end = clock();
-    printf("lock free chained hash map put find time:%lfs\n", (double)(end - start)/CLOCKS_PER_SEC);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec);
+    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
+    printf("lock-free chained hash map put find time:%lfs\n", elapsed);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -188,7 +195,7 @@ int main(int argc, char **argv){
     lmn_closed_hashmap_t closed_map;
     lmn_closed_init(&closed_map);
 
-    start = clock();
+    clock_gettime(CLOCK_MONOTONIC, &start);
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &closed_map;
       param[i].array = array;
@@ -199,8 +206,10 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    end = clock();
-    printf("lock free closed hash map put find time:%lfs\n", (double)(end - start)/CLOCKS_PER_SEC);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsed = (end.tv_sec - start.tv_sec);
+    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
+    printf("lock-free closed hash map put find time:%lfs\n", elapsed);
     lmn_closed_entry_t *ent2;
     lmn_closed_free(&closed_map, ent2, ({
       lmn_free(ent2)      
