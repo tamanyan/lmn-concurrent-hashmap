@@ -9,8 +9,8 @@
 #include "lmn_hash.h"
 #include "lmn_map_util.h"
 
+
 typedef struct _lmn_chained_entry_t {
-  lmn_word                     volatile hash;
   lmn_key_t                    volatile key;
   lmn_data_t                   volatile data;
   struct _lmn_chained_entry_t* volatile next;
@@ -20,6 +20,9 @@ typedef struct {
   lmn_word               volatile bucket_mask;
   lmn_word               volatile size;
   lmn_chained_entry_t**  volatile tbl;
+# ifndef HASHMAP_LOCK_FREE
+  pthread_mutex_t        volatile mutexs[HASHMAP_SEGMENT];
+# endif /* HASHMAP_THREAD_SAVE */
 } lmn_chained_hashmap_t;
 
 #define lmn_chained_foreach(map, ent, code)             \

@@ -8,10 +8,15 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef HASHMAP_LOCK_FREE
 #include <pthread.h>
+#define HASHMAP_SEGMENT 12
+#endif
 
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_CAST(type, value)        (value)type
+#define LMN_ATOMIC_ADD(ptr, v)       __sync_fetch_and_add(ptr, v)
 
 #define lmn_malloc(size, type)       (type*)malloc(sizeof(type)*(size))
 #define lmn_calloc(size, type)       (type*)calloc((size), sizeof(type))

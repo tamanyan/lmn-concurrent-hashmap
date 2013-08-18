@@ -20,7 +20,7 @@ void lmn_chained_print_map(lmn_chained_hashmap_t *map) {
     ent = map->tbl[i];
     dbgprint("(%d) ",i);
     while (ent != LMN_HASH_EMPTY) {
-      dbgprint("%x:%d:%d ", ent->hash, ent->key, ent->data);
+      dbgprint("%d:%d ", ent->key, ent->data);
       count++;
       ent = ent->next;
     }
@@ -68,35 +68,62 @@ void lmn_chained_init(lmn_chained_hashmap_t* map) {
   map->bucket_mask      = LMN_CHAINED_INIT_SIZE - 1;
   map->size             = 0;
   memset(map->tbl, 0x00, LMN_CHAINED_INIT_SIZE);
+# ifndef HASHMAP_LOCK_FREE
+  {
+    pthread_mutexattr_t mattr[HASHMAP_SEGMENT];
+    int i;
+    for (i = 0; i < HASHMAP_SEGMENT; i++) {
+      pthread_mutexattr_init(&mattr[i]);
+      pthread_mutexattr_setpshared(&mattr[i], PTHREAD_PROCESS_SHARED);
+      pthread_mutex_init(&map->mutexs[i], &mattr[i]);
+    }
+  }
+# endif
 }
 
 
 lmn_data_t lmn_chained_find(lmn_chained_hashmap_t *map, lmn_key_t key) {
-  lmn_hash_t hash           = lmn_hash_calc(key);
-  lmn_chained_entry_t *ent  = map->tbl[hash & map->bucket_mask];
+  lmn_word bucket           = lmn_hash_calc(key) & map->bucket_mask;
+  lmn_chained_entry_t *ent  = map->tbl[bucket];
 
+# ifndef HASHMAP_LOCK_FREE
+  pthread_mutex_lock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
   while(ent != LMN_HASH_EMPTY) {
     if (ent->key == key) {
+# ifndef HASHMAP_LOCK_FREE
+      pthread_mutex_unlock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
       return ent->data;
     }
     ent = ent->next;
   }
+# ifndef HASHMAP_LOCK_FREE
+  pthread_mutex_unlock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
+  dbgprint("not found data key:%d", key);
   return NULL;
 }
 
 void lmn_chained_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
-  lmn_hash_t hash              = lmn_hash_calc(key);
-  lmn_chained_entry_t **ent    = &map->tbl[hash & map->bucket_mask];
+  lmn_word bucket              = lmn_hash_calc(key) & map->bucket_mask;
+  lmn_chained_entry_t **ent    = &map->tbl[bucket];
   lmn_chained_entry_t *cur;
 
+# ifndef HASHMAP_LOCK_FREE
+  pthread_mutex_lock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
   if ((*ent) == LMN_HASH_EMPTY) {
     (*ent) = lmn_malloc(1, lmn_chained_entry_t);
-    // dbgprint("insert new key:%d, data:%d\n", key, data);
+    //dbgprint("insert new key:%d, data:%d\n", key, data);
   } else {
     cur = *ent;
     do {
       if (cur->key == key) {
         cur->data = data;
+# ifndef HASHMAP_LOCK_FREE
+        pthread_mutex_unlock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
         return;
       }
       //printf("%p ", cur->next);
@@ -107,10 +134,13 @@ void lmn_chained_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t data)
   }
   (*ent)->next = NULL;
   (*ent)->key  = key;
-  (*ent)->hash = hash;
   (*ent)->data = data;
-  map->size++;
+  LMN_ATOMIC_ADD(&(map->size), 1);
+  // map->size++;
   if (map->size > map->bucket_mask * 0.75) {
     lmn_chained_rehash(map);
   }
+# ifndef HASHMAP_LOCK_FREE
+  pthread_mutex_unlock(&map->mutexs[bucket % HASHMAP_SEGMENT]);
+# endif
 }
