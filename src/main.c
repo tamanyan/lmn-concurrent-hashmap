@@ -3,10 +3,9 @@
  * @brief  main program
  * @author Taketo Yoshida
  */
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -15,6 +14,12 @@
 #include "map/lmn_hopscotch_hashmap.h"
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
+
+double gettimeofday_sec(){
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  return (double)t.tv_sec + (double)t.tv_usec * 1e-6;
+}
 
 #define MAX_KEY (200000 * HASHMAP_SEGMENT)
 
@@ -97,8 +102,7 @@ void *thread_closed_free(void* arg) {
 
 int main(int argc, char **argv){
 
-  struct timespec  start, end;
-  double elapsed;
+  double  start, end;
   lmn_data_t         data;
   int              result;
   int      array[MAX_KEY];
@@ -145,7 +149,7 @@ int main(int argc, char **argv){
     lmn_chained_hashmap_t chained_map;
     lmn_chained_init(&chained_map);
 
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    start = gettimeofday_sec();
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &chained_map;
       param[i].array = array;
@@ -156,10 +160,8 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    elapsed = (end.tv_sec - start.tv_sec);
-    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
-    printf("chained hash map put find time:%lfs\n", elapsed);
+    end = gettimeofday_sec();
+    printf("chained hash map put find time:%lfs\n", end - start);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -170,7 +172,7 @@ int main(int argc, char **argv){
     lmn_chained_hashmap_t chained_map;
     lmn_chained_init(&chained_map);
 
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    start = gettimeofday_sec();
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &chained_map;
       param[i].array = array;
@@ -181,10 +183,8 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    elapsed = (end.tv_sec - start.tv_sec);
-    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
-    printf("lock-free chained hash map put find time:%lfs\n", elapsed);
+    end = gettimeofday_sec();
+    printf("lock-free chained hash map put find time:%lfs\n", end - start);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -195,7 +195,7 @@ int main(int argc, char **argv){
     lmn_closed_hashmap_t closed_map;
     lmn_closed_init(&closed_map);
 
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    start = gettimeofday_sec();
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &closed_map;
       param[i].array = array;
@@ -206,10 +206,8 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       pthread_join(p[i], NULL);
     }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    elapsed = (end.tv_sec - start.tv_sec);
-    elapsed += (double)(end.tv_nsec - start.tv_nsec) / 1000000000.0;
-    printf("lock-free closed hash map put find time:%lfs\n", elapsed);
+    end = gettimeofday_sec();
+    printf("lock-free closed hash map put find time:%lfs\n", end - start);
     lmn_closed_entry_t *ent2;
     lmn_closed_free(&closed_map, ent2, ({
       lmn_free(ent2)      
