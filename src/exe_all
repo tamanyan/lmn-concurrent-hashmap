@@ -1,8 +1,14 @@
 #!/bin/bash
 
 ./benchmark -a lock_chain_hash -n $1
+./benchmark -a lock_chain_hash -n $1
+./benchmark -a lock_chain_hash -n $1
 echo ""
 ./benchmark -a lock_free_chain_hash -n $1
+./benchmark -a lock_free_chain_hash -n $1
+./benchmark -a lock_free_chain_hash -n $1
 echo ""
+./benchmark -a lock_free_closed_hash -n $1
+./benchmark -a lock_free_closed_hash -n $1
 ./benchmark -a lock_free_closed_hash -n $1
 

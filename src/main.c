@@ -162,7 +162,7 @@ int main(int argc, char **argv){
       pthread_join(p[i], NULL);
     }
     end = gettimeofday_sec();
-    printf("chained hash map put find time:%lfs\n", end - start);
+    printf("chained hash map put find, %lf\n", end - start);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -185,7 +185,7 @@ int main(int argc, char **argv){
       pthread_join(p[i], NULL);
     }
     end = gettimeofday_sec();
-    printf("lock-free chained hash map put find time:%lfs\n", end - start);
+    printf("lock-free chained hash map put find, %lf\n", end - start);
     lmn_chained_entry_t *ent2;
     lmn_chained_free(&chained_map, ent2, ({
       lmn_free(ent2)      
@@ -208,7 +208,7 @@ int main(int argc, char **argv){
       pthread_join(p[i], NULL);
     }
     end = gettimeofday_sec();
-    printf("lock-free closed hash map put find time:%lfs\n", end - start);
+    printf("lock-free closed hash map put find, %lf\n", end - start);
     lmn_closed_entry_t *ent2;
     lmn_closed_free(&closed_map, ent2, ({
       lmn_free(ent2)      

@@ -80,7 +80,7 @@ void lmn_closed_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
     (*ent) = lmn_malloc(1, lmn_closed_entry_t);
     (*ent)->key  = key;
     (*ent)->data = data;
-    map->size++;
+    LMN_ATOMIC_ADD(&(map->size), 1);
     if (map->size > map->bucket_mask * 0.75) {
       lmn_closed_rehash(map);
     }
@@ -103,7 +103,7 @@ void lmn_closed_free_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t da
     }
     (*ent)->key  = key;
     (*ent)->data = data;
-    map->size++;
+    LMN_ATOMIC_ADD(&(map->size), 1);
     if (map->size > map->bucket_mask * 0.75) {
       lmn_closed_rehash(map);
     }
