@@ -7,13 +7,13 @@
 #include <string.h>
 #include <sys/time.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include "map/lmn_map.h"
 #include "map/lmn_hopscotch_hashmap.h"
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
+#include <unistd.h>
 
 double gettimeofday_sec(){
   struct timeval t;
@@ -48,11 +48,14 @@ void *thread_chained_free(void* arg) {
 
   //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
   for (int i = offset; i < offset + seg; i++) {
-    lmn_chained_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
-    data = lmn_chained_free_find(map, (lmn_key_t)array[i]);
+    for (int j = 0; j < 1; j++) {
+      lmn_chained_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
+    }
+
+    /*data = lmn_chained_free_find(map, (lmn_key_t)array[i]);
     if (data != i) {
       printf("not same data\n");
-    }
+    }*/
   } 
   //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
 }
@@ -83,8 +86,8 @@ void *thread_closed_free(void* arg) {
   int                     id = targ->id;
   int                    seg = (MAX_KEY / targ->thread_num);
   int                 offset = seg * id;
-  lmn_data_t            data;
-  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  lmn_data_t            data = 0;
+  //printf("enter thread id:%d, offset:%d last:%d\n", id, offset, offset+seg-1);
   for (int i = offset; i < offset + seg; i++) {
     lmn_closed_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_closed_find(map, (lmn_key_t)array[i]);
@@ -92,7 +95,8 @@ void *thread_closed_free(void* arg) {
       printf("not same data\n");
     }
   } 
-  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
+  //printf("%d\n", data);
+  //printf("finish thread id:%d, offset:%d last:%d\n", id, offset, offset+seg-1);
 }
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
@@ -106,6 +110,8 @@ int main(int argc, char **argv){
   lmn_data_t         data;
   int              result;
   int              *array;
+  extern char *optarg;
+  extern int  optind, opterr;
 
   char      algrithm[128] = {0};
   int               count = 1;
@@ -173,6 +179,9 @@ int main(int argc, char **argv){
     lmn_chained_hashmap_t chained_map;
     lmn_chained_init(&chained_map);
 
+    /*for(int i = 0;i < MAX_KEY;i++) {
+      lmn_chained_free_put(&chained_map, (lmn_key_t)array[i], (lmn_data_t)i);
+    }*/
     start = gettimeofday_sec();
     for (int i = 0; i < thread_num; i++) {
       param[i].map = &chained_map;

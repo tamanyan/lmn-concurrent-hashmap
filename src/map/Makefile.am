@@ -1,4 +1,5 @@
 noinst_LIBRARIES = liblmn_map.a
+
 liblmn_map_a_CFLAGS = \
 					  	  -std=c99          \
 						  -I../             	\

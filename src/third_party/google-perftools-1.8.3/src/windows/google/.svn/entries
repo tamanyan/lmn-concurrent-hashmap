@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="466"
+   name=""
+   committed-date="2011-12-25T05:57:56.038835Z"
+   url="https://slim-runtime.googlecode.com/svn/trunk/slim/third_party/google-perftools-1.8.3/src/windows/google"
+   last-author="masato.gocho@gmail.com"
+   kind="dir"
+   uuid="75c3c31a-a717-11dd-9a14-c1645b63b0c6"
+   repos="https://slim-runtime.googlecode.com/svn"
+   revision="501"/>
+<entry
+   committed-rev="466"
+   name="tcmalloc.h"
+   text-time="2012-12-26T18:33:12.000000Z"
+   committed-date="2011-12-25T05:57:56.038835Z"
+   checksum="be8656931193275d950c4339ffe174d6"
+   last-author="masato.gocho@gmail.com"
+   kind="file"
+   prop-time="2012-12-26T18:33:12.000000Z"/>
+<entry
+   committed-rev="466"
+   name="tcmalloc.h.in"
+   text-time="2012-12-26T18:33:12.000000Z"
+   committed-date="2011-12-25T05:57:56.038835Z"
+   checksum="073bc97b9f5ffc1cb7738e38533e2618"
+   last-author="masato.gocho@gmail.com"
+   kind="file"
+   prop-time="2012-12-26T18:33:12.000000Z"/>
+</wc-entries>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="466"
+   name=""
+   committed-date="2011-12-25T05:57:56.038835Z"
+   url="https://slim-runtime.googlecode.com/svn/trunk/slim/third_party/google-perftools-1.8.3/src/google/perftools"
+   last-author="masato.gocho@gmail.com"
+   kind="dir"
+   uuid="75c3c31a-a717-11dd-9a14-c1645b63b0c6"
+   repos="https://slim-runtime.googlecode.com/svn"
+   revision="501"/>
+</wc-entries>

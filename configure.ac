@@ -1,7 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.68])
 AC_INIT([LmnConcurrentHashMap], [1.0.0], [tamanyan.sss@gmail.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/main.c])
@@ -31,6 +30,16 @@ AC_CHECK_HEADERS([string.h],[AC_DEFINE(HAVE_STRING_H)],[AC_MSG_ERROR([Sorry, can
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+
+default_enable_tcmalloc=no
+
+AC_ARG_ENABLE([tcmalloc],                                                                                                                               
+              [AS_HELP_STRING([--enable-tcmalloc],
+                              [turn on using google perftools tcmalloc (linux only)])],
+              [], 
+              [enable_tcmalloc="$default_enable_tcmalloc"])
+
+AM_CONDITIONAL(ENABLE_TCMALLOC, test "$enable_tcmalloc" = "yes")
 
 # Checks for library functions.
 

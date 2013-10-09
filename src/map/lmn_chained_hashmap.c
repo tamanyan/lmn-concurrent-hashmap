@@ -156,7 +156,7 @@ lmn_data_t lmn_chained_free_find(lmn_chained_hashmap_t *map, lmn_key_t key) {
     }
     ent = ent->next;
   }
-  dbgprint("not found data key:%d\n", key);
+  // dbgprint("not found data key:%d\n", key);
   return NULL;
 }
 
