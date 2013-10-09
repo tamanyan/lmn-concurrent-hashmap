@@ -8,9 +8,9 @@ benchmark_DEPENDENCIES = ./map/liblmn_map.a
 benchmark_LDADD = -llmn_map -lpthread
 
 if ENABLE_TCMALLOC
-benchmark_LDFLAGS += -L./third_party/google-perftools-1.8.3/.libs
-benchmark_DEPENDENCIES += ./third_party/google-perftools-1.8.3/.libs/libtcmalloc_minimal_in_slim.a
-benchmark_LDADD += -ltcmalloc_minimal_in_slim
+benchmark_LDFLAGS += -L./third_party/gperftools-2.1/.libs
+benchmark_DEPENDENCIES += ./third_party/gperftools-2.1/.libs/libtcmalloc_minimal.a
+benchmark_LDADD += -ltcmalloc_minimal
 endif
 
 benchmark_SOURCES = main.c

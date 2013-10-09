@@ -8,6 +8,8 @@
 
 #define LMN_CLOSED_INIT_SIZE (32 * 1024 * 1024)
 
+#ifdef __linux__
+
 inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 #ifdef __x86_64__
   /* Robert Jenkins' 32 bit Mix Function */
@@ -41,6 +43,7 @@ inline int lmn_hash_key_eq(lmn_hash_t key1, lmn_hash_t key2) {
   return key1 == key2;
 }
 
+#endif
 /*
  * private functions
  */

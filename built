@@ -1,0 +1,10 @@
+#!/bin/bash
+
+autoreconf -i
+./configure
+cd src/third_party/gperftools-2.1/
+./configure
+make
+cd ../../../
+make
+export DYLD_LIBRARY_PATH=./third_party/gperftools-2.1/.libs/
