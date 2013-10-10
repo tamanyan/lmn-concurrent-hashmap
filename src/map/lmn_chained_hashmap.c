@@ -43,6 +43,7 @@ inline int lmn_hash_key_eq(lmn_hash_t key1, lmn_hash_t key2) {
 }
 
 #endif
+
 /*
  * private functions
  */
