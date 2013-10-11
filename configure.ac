@@ -3,7 +3,7 @@
 
 AC_INIT([LmnConcurrentHashMap], [1.0.0], [tamanyan.sss@gmail.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])
 
 
@@ -16,7 +16,6 @@ OPTIMIZER_CXXFLAGS="-O2"
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
 AC_PROG_INSTALL
 AM_PROG_CC_C_O
 AC_PROG_RANLIB

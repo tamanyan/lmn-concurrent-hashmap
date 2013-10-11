@@ -59,6 +59,7 @@ void lmn_closed_init(lmn_closed_hashmap_t *map) {
   //dbgprint("init closed hash map %p\n", map);
 }
 
+/* lock base */
 lmn_data_t lmn_closed_find(lmn_closed_hashmap_t *map, lmn_key_t key) {
   lmn_hash_t             hash = lmn_closed_find_bucket(map, key);
   lmn_closed_entry_t *ent = map->tbl[hash];
@@ -87,6 +88,7 @@ void lmn_closed_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
   }
 }
 
+/* lock free */
 void lmn_closed_free_put(lmn_closed_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
   lmn_hash_t        bucket = lmn_closed_find_bucket(map, key);
   lmn_closed_entry_t **ent = &map->tbl[bucket];

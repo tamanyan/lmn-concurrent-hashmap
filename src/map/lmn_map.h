@@ -7,6 +7,8 @@
 #  define LMN_MAP_H
 
 #include "lmn_map_util.h"
+#include "lmn_chained_hashmap.h"
+#include "lmn_closed_hashmap.h"
 
 typedef void*    lmn_instance_t;
 

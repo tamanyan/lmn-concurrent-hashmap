@@ -1,5 +1,5 @@
 /**
- * @file   main.c
+ * @file   main.cc
  * @brief  main program
  * @author Taketo Yoshida
  */
@@ -10,7 +10,6 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include "map/lmn_map.h"
-#include "map/lmn_hopscotch_hashmap.h"
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
 #include <unistd.h>
@@ -21,7 +20,7 @@ double gettimeofday_sec(){
   return (double)t.tv_sec + (double)t.tv_usec * 1e-6;
 }
 
-#define MAX_KEY (300000 * HASHMAP_SEGMENT)
+#define MAX_KEY (300000 * 12)
 
 typedef struct {
   lmn_chained_hashmap_t  *map;
@@ -72,7 +71,7 @@ void *thread_chained(void* arg) {
   for (int i = offset; i < offset + seg; i++) {
     lmn_chained_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_chained_find(map, (lmn_key_t)array[i]);
-    if (data != i) {
+    if (data != (lmn_data_t)i) {
       printf("not same data\n");
     }
   } 
@@ -91,7 +90,7 @@ void *thread_closed_free(void* arg) {
   for (int i = offset; i < offset + seg; i++) {
     lmn_closed_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
     data = lmn_closed_find(map, (lmn_key_t)array[i]);
-    if (data != i) {
+    if (data !=  (lmn_data_t)i) {
       printf("not same data\n");
     }
   } 
@@ -145,7 +144,7 @@ int main(int argc, char **argv){
     strcpy(algrithm, ALG_NAME_LOCK_CHAINED_HASHMAP);
   }
   srand((unsigned) time(NULL));
-  array = malloc(sizeof(int) * MAX_KEY);
+  array = (int*)malloc(sizeof(int) * MAX_KEY);
   for(int i = 0;i < MAX_KEY;i++) {
     array[i] = rand(); 
   }

@@ -23,6 +23,9 @@
 
 tags
 
+/src/third_party/gperftools-2.1/
+config.h.in~
+test-driver
 /Makefile
 /Makefile.in
 /src/Makefile

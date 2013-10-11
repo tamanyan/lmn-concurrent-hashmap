@@ -20,9 +20,7 @@ typedef struct {
   lmn_word               volatile bucket_mask;
   lmn_word               volatile size;
   lmn_chained_entry_t**  volatile tbl;
-# ifndef HASHMAP_LOCK_FREE
-  pthread_mutex_t        volatile mutexs[HASHMAP_SEGMENT];
-# endif /* HASHMAP_THREAD_SAVE */
+  pthread_mutex_t        mutexs[HASHMAP_SEGMENT];
 } lmn_chained_hashmap_t;
 
 #define lmn_chained_foreach(map, ent, code)             \

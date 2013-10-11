@@ -8,11 +8,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#ifndef HASHMAP_LOCK_FREE
 #include <pthread.h>
-#define HASHMAP_SEGMENT 12
-#endif
+
+#define HASHMAP_SEGMENT 64
 
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_CAST(type, value)        (value)type
