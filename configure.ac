@@ -44,4 +44,5 @@ AM_CONDITIONAL(ENABLE_TCMALLOC, test "$enable_tcmalloc" = "yes")
 
 AC_OUTPUT(Makefile \
           src/map/Makefile
+          src/lmntal/hashmap/Makefile
           src/Makefile)

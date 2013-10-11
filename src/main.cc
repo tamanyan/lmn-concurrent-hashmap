@@ -12,7 +12,12 @@
 #include "map/lmn_map.h"
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
+#include "lmntal/hashmap/hashmap.hpp"
+#include "lmntal/hashmap/chain_hashmap.hpp"
+using namespace lmntal::hashmap;
 #include <unistd.h>
+#include <iostream>
+using namespace std;
 
 double gettimeofday_sec(){
   struct timeval t;
@@ -115,6 +120,9 @@ int main(int argc, char **argv){
   char      algrithm[128] = {0};
   int               count = 1;
   int          thread_num = 1;
+
+  ChainHashMap<int, int> map;// = new ChainHashMap<int, int>();
+  map.Get(1);
 
   while((result=getopt(argc,argv,"a:c:n:"))!=-1){
     switch(result){
