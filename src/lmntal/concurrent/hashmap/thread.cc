@@ -6,7 +6,9 @@
 #include "thread.h"
 
 namespace lmntal {
+namespace concurrent {
 namespace hashmap {
 
+}
 }
 }

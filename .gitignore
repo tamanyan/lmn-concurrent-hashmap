@@ -21,6 +21,7 @@
 *.un~
 *.swp
 
+.DS_Store
 tags
 
 /src/third_party/gperftools-2.1/
@@ -32,6 +33,8 @@ test-driver
 /src/Makefile.in
 /src/map/Makefile
 /src/map/Makefile.in
+src/lmntal/concurrent/Makefile
+src/lmntal/concurrent/Makefile.in
 /aclocal.m4
 /autom4te.cache/
 /config.h

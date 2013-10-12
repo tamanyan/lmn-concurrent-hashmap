@@ -7,6 +7,7 @@
 #  define THREAD_H
 
 namespace lmntal {
+namespace concurrent {
 namespace hashmap {
 
 class Thread {
@@ -16,6 +17,7 @@ class Thread {
 
 };
 
+}
 }
 }
 

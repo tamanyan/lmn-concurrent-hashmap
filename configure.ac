@@ -13,6 +13,7 @@ AC_CONFIG_HEADERS([config.h])
 OPTIMIZER_CFLAGS="-O2"
 OPTIMIZER_CXXFLAGS="-O2"
 
+CFLAGS="$CFLAGS -std=gnu++0x"
 
 # Checks for programs.
 AC_PROG_CXX
@@ -24,8 +25,6 @@ AC_PROG_RANLIB
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdio.h],[AC_DEFINE(HAVE_STDIO_H)],[AC_MSG_ERROR([Sorry, cantnot do anything for you])])
-AC_CHECK_HEADERS([string.h],[AC_DEFINE(HAVE_STRING_H)],[AC_MSG_ERROR([Sorry, cannot do anything for you])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -44,5 +43,5 @@ AM_CONDITIONAL(ENABLE_TCMALLOC, test "$enable_tcmalloc" = "yes")
 
 AC_OUTPUT(Makefile \
           src/map/Makefile
-          src/lmntal/hashmap/Makefile
+          src/lmntal/concurrent/Makefile
           src/Makefile)
