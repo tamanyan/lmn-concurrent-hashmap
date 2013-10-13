@@ -17,14 +17,15 @@ namespace hashmap {
 
 #define SECTION_SIZE 12
 
-#define chain_foreach(map, ent, code)             \
+#define chain_foreach(map, type, ent, code)             \
   {                                                          \
     int __i;                                                 \
     for (__i = 0; __i < ((map)->bucket_mask + 1); __i++) {    \
       (ent) = (map)->tbl[__i];                                \
       while ((ent) != LMN_HASH_EMPTY) {                      \
+        type __next = (ent)->next;                           \
         (code);                                              \
-        (ent) = (ent)->next;                                 \
+        (ent) = __next;                                 \
       }                                                      \
     }                                                        \
   }
@@ -48,10 +49,15 @@ public:
   }
 
   virtual ~ChainHashMap() {
-    Entry<Key, Value> *ent;
-    chain_foreach(this, ent, ({
+    Entry<Key, Value> *ent, *next;
+    for (int i = 0; i < bucket_mask + 1; i++) {
+      ent = tbl[i];
+      while(ent != LMN_HASH_EMPTY) {
+        next = ent->next;
         delete ent;
-    }));
+        ent = next;
+      }
+    }
     delete tbl;
   }
 
@@ -74,8 +80,40 @@ public:
     return &Get(key) != &empty_value;
   }
 
-  void Extend() {
+  void Dump() {
     int i;
+    int count = 0;
+    Entry<Key, Value> *ent;
+    dbgprint("======================================================================\n", NULL);
+    for (i = 0; i < (bucket_mask + 1); i++) {
+      ent = tbl[i];
+      dbgprint("(%d) ",i);
+      while (ent != LMN_HASH_EMPTY) {
+        dbgprint("%d:%d ", ent->key, ent->value);
+        count++;
+        ent = ent->next;
+      }
+      dbgprint("\n", NULL);
+    }
+    dbgprint("tbl size %d, count %d org_count %d\n", bucket_mask+1, count, size);
+    dbgprint("======================================================================\n", NULL);
+  }
+
+  int Count() {
+    int i;
+    int count = 0;
+    Entry<Key, Value> *ent;
+    for (i = 0; i < (bucket_mask + 1); i++) {
+      ent = tbl[i];
+      while (ent != LMN_HASH_EMPTY) {
+        count++;
+        ent = ent->next;
+      }
+    }
+    return count;
+  }
+
+  void Extend() {
     lmn_word     new_size = bucket_mask + 1;
     lmn_word     old_size = new_size;
     Entry<Key, Value>      **new_tbl = new Entry<Key, Value>*[new_size <<= 1];
@@ -84,21 +122,23 @@ public:
     lmn_word     bucket;
     lmn_word     new_bucket_mask = new_size - 1;
 
-    dbgprint("rehash start old_size:%d new_size:%d\n", old_size, new_size);
-    // lmn_chained_print_map(map);
-    for (i = 0; i < old_size; i++) {
+    int count = 0;
+    for(size_t i=0; i < new_size; ++i){new_tbl[i] = NULL;}
+    for (int i = 0; i < old_size; i++) {
       ent = old_tbl[i];
       while (ent) {
         next = ent->next;
+
         bucket = (hash<Key>(ent->key) & new_bucket_mask);
         ent->next = new_tbl[bucket];
         new_tbl[bucket] = ent;
+
         ent = next;
       }
     }
+
     bucket_mask = new_bucket_mask;
     tbl         = new_tbl;
-    //lmn_chained_print_map(map);
     delete old_tbl;
   }
 
@@ -113,12 +153,14 @@ protected:
   Entry<Key, Value>* FindEntry(lmn_word bucket, Key key) {
     Entry<Key, Value> *ent      = tbl[bucket];
 
-    while(ent != LMN_HASH_EMPTY) {
+    while (ent != LMN_HASH_EMPTY) {
       if (ent->key == key) {
         return ent;
       }
       ent = ent->next;
     }
+    //dbgprint("not found (%d,%d)\n", bucket, key);
+    //cout << Count() << endl;
     return NULL;
   }
 
@@ -145,7 +187,6 @@ protected:
     (*ent)->key  = key;
     (*ent)->value = value;
     LMN_ATOMIC_ADD(&(size), 1);
-    
   }
 };
 
@@ -170,16 +211,18 @@ public:
   }
 
   Value& Get(const Key& key) {
-    lmn_word   bucket = hash<Key>(key) & this->bucket_mask;
+    lmn_word bucket = hash<Key>(key) & this->bucket_mask;
     pthread_mutex_lock(&mutexs[bucket % SECTION_SIZE]);
-    Entry<Key, Value> *ent = this->FindEntry(bucket, key);
+    Value value = ChainHashMap<Key, Value>::Get(key);
     pthread_mutex_unlock(&mutexs[bucket % SECTION_SIZE]);
-    return ent != NULL ? ent->value : this->empty_value;
+    return value;
   }
 
   void Put(const Key& key, const Value& value) {
-    lmn_word   bucket = hash<Key>(key) & this->bucket_mask;
+    lmn_word hash_value = hash<Key>(key);
+    lmn_word bucket = hash_value & this->bucket_mask;
     pthread_mutex_lock(&mutexs[bucket % SECTION_SIZE]);
+    bucket = hash_value & this->bucket_mask;
     this->PutEntry(bucket, key, value);
     pthread_mutex_unlock(&mutexs[bucket % SECTION_SIZE]);
     if (this->size > this->bucket_mask * 0.75) {
@@ -191,7 +234,11 @@ public:
     for (int i = 0; i < SECTION_SIZE; i++) {
       pthread_mutex_lock(&mutexs[i]);
     }
-    ChainHashMap<Key, Value>::Extend();
+    //cout << "extend start" << endl;
+    if (this->size > this->bucket_mask * 0.75) {
+      ChainHashMap<Key, Value>::Extend();
+    }
+    //cout << "extend end" << endl;
     for (int i = 0; i < SECTION_SIZE; i++) {
       pthread_mutex_unlock(&mutexs[i]);
     }

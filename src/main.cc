@@ -14,10 +14,12 @@
 #include "map/lmn_chained_hashmap.h"
 #include "lmntal/concurrent/hashmap/hashmap.hpp"
 #include "lmntal/concurrent/hashmap/chain_hashmap.hpp"
+#include "lmntal/concurrent/thread.h"
 #include <unistd.h>
 #include <iostream>
 using namespace std;
 using namespace lmntal::concurrent::hashmap;
+using namespace lmntal::concurrent;
 
 double gettimeofday_sec(){
   struct timeval t;
@@ -27,81 +29,41 @@ double gettimeofday_sec(){
 
 #define MAX_KEY (300000 * 12)
 
-typedef struct {
-  lmn_chained_hashmap_t  *map;
-  int                  *array;
-  int                      id;
-  int              thread_num;
-} thread_chained_param;
+#define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
+#define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lock_free_chain_hash"
+#define ALG_NAME_LOCK_CLOSED_HASHMAP "lock_closed_hash"
+#define ALG_NAME_LOCK_FREE_CLOSED_HASHMAP "lock_free_closed_hash"
 
-typedef struct {
-  lmn_closed_hashmap_t  *map;
-  int                  *array;
-  int                      id;
-  int              thread_num;
-} thread_closed_param;
+class HashMapTest : public Thread {
+private:
+  static int count;
+  int id;
+public:
+  HashMap<int, int> *map;
+  
+  HashMapTest() : id(HashMapTest::count++), Runnable() {}
 
-void *thread_chained_free(void* arg) {
-  thread_chained_param         *targ = (thread_chained_param*)arg;
-  lmn_chained_hashmap_t *map = targ->map;
-  int                 *array = targ->array;
-  int                     id = targ->id;
-  int                    seg = (MAX_KEY / targ->thread_num);
-  int                 offset = seg * id;
-  lmn_data_t            data;
+  void initialize(HashMap<int, int> *hashmap) {
+    map = hashmap;
+  }
 
-  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
-  for (int i = offset; i < offset + seg; i++) {
-    for (int j = 0; j < 1; j++) {
-      lmn_chained_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
+  void Run() {
+    int section = (MAX_KEY / HashMapTest::count);
+    int offset  = section * id;
+    printf("Enter id: %d offset:%d last:%d\n",id, offset, offset+section-1);
+    for (int i = offset; i < offset + section; i++) {
+      map->Put(i, i);
     }
-
-    /*data = lmn_chained_free_find(map, (lmn_key_t)array[i]);
-    if (data != i) {
-      printf("not same data\n");
-    }*/
-  } 
-  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
-}
-
-void *thread_chained(void* arg) {
-  thread_chained_param         *targ = (thread_chained_param*)arg;
-  lmn_chained_hashmap_t *map = targ->map;
-  int                 *array = targ->array;
-  int                     id = targ->id;
-  int                    seg = (MAX_KEY / targ->thread_num);
-  int                 offset = seg * id;
-  lmn_data_t            data;
-  //printf("enter thread id:%d, offset:%d segment:%d\n", id, offset, seg);
-  for (int i = offset; i < offset + seg; i++) {
-    lmn_chained_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
-    data = lmn_chained_find(map, (lmn_key_t)array[i]);
-    if (data != (lmn_data_t)i) {
-      printf("not same data\n");
+    for (int i = offset; i < offset + section; i++) {
+      if (!map->Exist(i)) {
+        printf("not exsits id: %d key: %d\n", id, i);
+      }
     }
-  } 
-  //printf("finish thread id:%d, offset:%d segment:%d\n", id, offset, seg);
-}
+    cout << "End" << endl;
+  }
+};
 
-void *thread_closed_free(void* arg) {
-  thread_closed_param         *targ = (thread_closed_param*)arg;
-  lmn_closed_hashmap_t *map = targ->map;
-  int                 *array = targ->array;
-  int                     id = targ->id;
-  int                    seg = (MAX_KEY / targ->thread_num);
-  int                 offset = seg * id;
-  lmn_data_t            data = 0;
-  //printf("enter thread id:%d, offset:%d last:%d\n", id, offset, offset+seg-1);
-  for (int i = offset; i < offset + seg; i++) {
-    lmn_closed_free_put(map, (lmn_key_t)array[i], (lmn_data_t)i);
-    data = lmn_closed_find(map, (lmn_key_t)array[i]);
-    if (data !=  (lmn_data_t)i) {
-      printf("not same data\n");
-    }
-  } 
-  //printf("%d\n", data);
-  //printf("finish thread id:%d, offset:%d last:%d\n", id, offset, offset+seg-1);
-}
+int HashMapTest::count = 0;
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
 #define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lock_free_chain_hash"
@@ -121,16 +83,6 @@ int main(int argc, char **argv){
   int               count = 1;
   int          thread_num = 1;
 
-  LockFreeChainHashMap<int, int> *map = new LockFreeChainHashMap<int, int>(10);
-  for (int i = 0; i < 12048; i++) {
-    map->Put(i, i);
-  }
-  for (int i = 0; i < 12048; i++) {
-    if (map->Exist(i) == false) {
-      cout << "not_exists" << i << endl;
-    }
-  }
-  delete map;
 
   while((result=getopt(argc,argv,"a:c:n:"))!=-1){
     switch(result){
@@ -159,83 +111,28 @@ int main(int argc, char **argv){
   if (algrithm[0] == 0x00) {
     strcpy(algrithm, ALG_NAME_LOCK_CHAINED_HASHMAP);
   }
-  srand((unsigned) time(NULL));
-  array = (int*)malloc(sizeof(int) * MAX_KEY);
-  for(int i = 0;i < MAX_KEY;i++) {
-    array[i] = rand(); 
-  }
+  HashMap<int, int> *map;
 
   if (strcmp(ALG_NAME_LOCK_CHAINED_HASHMAP, algrithm) == 0) {
-    pthread_t p[thread_num];
-    thread_chained_param param[thread_num];
-    lmn_chained_hashmap_t chained_map;
-    lmn_chained_init(&chained_map);
-
-    start = gettimeofday_sec();
-    for (int i = 0; i < thread_num; i++) {
-      param[i].map = &chained_map;
-      param[i].array = array;
-      param[i].id = i;
-      param[i].thread_num = thread_num;
-      pthread_create(&p[i] , NULL, thread_chained, &param[i] );
-    }
-    for (int i = 0; i < thread_num; i++) {
-      pthread_join(p[i], NULL);
-    }
-    end = gettimeofday_sec();
-    printf("chained hash map put find, %lf\n", end - start);
-    lmn_chained_entry_t *ent2;
-    lmn_chained_free(&chained_map, ent2, ({
-      lmn_free(ent2)      
-    }));
+    map = new ConcurrentChainHashMap<int, int>();
+    cout << "ConcurrentChainHashMap" << endl;
   } else if (strcmp(ALG_NAME_LOCK_FREE_CHAINED_HASHMAP, algrithm) == 0) {
-    pthread_t p[thread_num];
-    thread_chained_param param[thread_num];
-    lmn_chained_hashmap_t chained_map;
-    lmn_chained_init(&chained_map);
-
-    /*for(int i = 0;i < MAX_KEY;i++) {
-      lmn_chained_free_put(&chained_map, (lmn_key_t)array[i], (lmn_data_t)i);
-    }*/
-    start = gettimeofday_sec();
-    for (int i = 0; i < thread_num; i++) {
-      param[i].map = &chained_map;
-      param[i].array = array;
-      param[i].id = i;
-      param[i].thread_num = thread_num;
-      pthread_create(&p[i] , NULL, thread_chained_free, &param[i] );
-    }
-    for (int i = 0; i < thread_num; i++) {
-      pthread_join(p[i], NULL);
-    }
-    end = gettimeofday_sec();
-    printf("lock-free chained hash map put find, %lf\n", end - start);
-    lmn_chained_entry_t *ent2;
-    lmn_chained_free(&chained_map, ent2, ({
-      lmn_free(ent2)      
-    }));
+    map = new LockFreeChainHashMap<int, int>(thread_num);
+    cout << "LockFreeChainHashMap" << endl;
   } else if (strcmp(ALG_NAME_LOCK_FREE_CLOSED_HASHMAP, algrithm) == 0) {
-    pthread_t p[thread_num];
-    thread_closed_param param[thread_num];
-    lmn_closed_hashmap_t closed_map;
-    lmn_closed_init(&closed_map);
-
-    start = gettimeofday_sec();
-    for (int i = 0; i < thread_num; i++) {
-      param[i].map = &closed_map;
-      param[i].array = array;
-      param[i].id = i;
-      param[i].thread_num = thread_num;
-      pthread_create(&p[i] , NULL, thread_closed_free, &param[i] );
-    }
-    for (int i = 0; i < thread_num; i++) {
-      pthread_join(p[i], NULL);
-    }
-    end = gettimeofday_sec();
-    printf("lock-free closed hash map put find, %lf\n", end - start);
-    lmn_closed_entry_t *ent2;
-    lmn_closed_free(&closed_map, ent2, ({
-      lmn_free(ent2)      
-    }));
   }
+  HashMapTest *threads = new HashMapTest[thread_num];
+  for (int i = 0; i < thread_num; i++) {
+    threads[i].initialize(map);
+    threads[i].Start();
+  }
+  for (int i = 0; i < thread_num; i++) {
+    threads[i].Join();
+  }
+  for (int i = 0; i < MAX_KEY; i++) {
+    if (!map->Exist(i))
+      cout << "not found " << i << endl;
+  }
+  cout << map->Count() << endl;
+  delete map;
 }
