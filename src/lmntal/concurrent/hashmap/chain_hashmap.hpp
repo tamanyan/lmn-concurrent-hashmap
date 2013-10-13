@@ -128,11 +128,9 @@ public:
       ent = old_tbl[i];
       while (ent) {
         next = ent->next;
-
         bucket = (hash<Key>(ent->key) & new_bucket_mask);
         ent->next = new_tbl[bucket];
         new_tbl[bucket] = ent;
-
         ent = next;
       }
     }
@@ -293,7 +291,7 @@ public:
   }
 
   void Extend() {
-    //cout << "Extend" << in_thread << endl;
+    printf("Extend in_thread: %d\n", in_thread);
     pthread_mutex_lock(&mutex);
     if (this->size > this->bucket_mask * 0.75) {
       LMN_ATOMIC_ADD(&(during_extend), 1);
@@ -313,13 +311,16 @@ protected:
 
   Entry<Key, Value>* FindEntry(lmn_word bucket, Key key) {
     Entry<Key, Value> *ent      = this->tbl[bucket];
+    int count = 0;
 
     while(ent != LMN_HASH_EMPTY) {
       if (ent->key == key) {
         return ent;
       }
       ent = ent->next;
+      count++;
     }
+    printf("error entry key:%d count:%d\n", key, count);
     return NULL;
   }
 
@@ -328,30 +329,47 @@ protected:
     Entry<Key, Value>     *cur, *tmp;
 
     if ((*ent) == LMN_HASH_EMPTY) {
-      (*ent) = new Entry<Key, Value>();
-      (*ent)->next = NULL;
+      Entry<Key, Value> *tmp, *new_ent = NULL;
+      do {
+        tmp = *ent;
+        if (new_ent == NULL) {
+          new_ent = new Entry<Key, Value>();
+          new_ent->next = NULL;
+        } else {
+          new_ent->next = (*ent);
+          dbgprint("retry insert key:%d, data:%d\n", key, value);
+        }
+      } while(!LMN_CAS(&(*ent), tmp, new_ent));
     } else {
       Entry<Key, Value> *cur, *tmp, *new_ent = NULL;
-      cur = *ent;
       do {
+        cur = *ent;
         tmp = *ent;
         do {
           if (cur->key == key) {
             cur->value = value;
-            if (new_ent == NULL) lmn_free(new_ent)
+            if (new_ent == NULL) {
+              delete new_ent;
               return;
+            }
           }
-          //printf("%p ", cur->next);
         } while(cur->next != LMN_HASH_EMPTY && (cur = cur->next));
-        if (new_ent == NULL)
+        if (new_ent == NULL) {
           new_ent = new Entry<Key, Value>();
+        } else {
+          dbgprint("retry insert key:%d, data:%d\n", key, value);
+        }
         new_ent->next = (*ent);
+        // CAS target, old, new
       } while(!LMN_CAS(&(*ent), tmp, new_ent));
       //dbgprint("insert key:%d, data:%d\n", key, value);
     }
     (*ent)->key  = key;
     (*ent)->value = value;
     LMN_ATOMIC_ADD(&(this->size), 1);
+    if (!FindEntry(bucket, key)) {
+      printf("error2 %d\n", key);
+    }
   }
 };
 

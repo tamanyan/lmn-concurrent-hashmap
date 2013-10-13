@@ -54,21 +54,42 @@ public:
     for (int i = offset; i < offset + section; i++) {
       map->Put(i, i);
     }
-    for (int i = offset; i < offset + section; i++) {
-      if (!map->Exist(i)) {
-        printf("not exsits id: %d key: %d\n", id, i);
-      }
-    }
-    cout << "End" << endl;
+    printf("End id: %d\n",id);
   }
 };
 
 int HashMapTest::count = 0;
 
-#define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
-#define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lock_free_chain_hash"
-#define ALG_NAME_LOCK_CLOSED_HASHMAP "lock_closed_hash"
-#define ALG_NAME_LOCK_FREE_CLOSED_HASHMAP "lock_free_closed_hash"
+typedef struct {
+  lmn_chained_hashmap_t  *map;
+  int                  *array;
+  int                      id;
+  int              thread_num;
+} thread_chained_param;
+
+void *thread_chained_free(void* arg) {
+  thread_chained_param         *targ = (thread_chained_param*)arg;
+  lmn_chained_hashmap_t *map = targ->map;
+  int                     id = targ->id;
+  int                    seg = (MAX_KEY / targ->thread_num);
+  int                 offset = seg * id;
+  lmn_data_t            data;
+
+  printf("enter thread id:%d, offset:%d last:%d\n", id, offset, offset+seg-1);
+  for (int i = offset; i < offset + seg; i++) {
+    lmn_chained_free_put(map, (lmn_key_t)i, (lmn_data_t)i);
+    /*data = lmn_chained_free_find(map, (lmn_key_t)array[i]);
+    if (data != i) {
+      printf("not same data\n");
+    }*/
+  } 
+  for (int i = offset; i < offset + seg; i++) {
+    data = lmn_chained_free_find(map, (lmn_key_t)i);
+    if (data != (lmn_data_t)i) {
+      printf("not same data\n");
+    }
+  }
+}
 
 int main(int argc, char **argv){
 
@@ -134,5 +155,27 @@ int main(int argc, char **argv){
       cout << "not found " << i << endl;
   }
   cout << map->Count() << endl;
+
+  //pthread_t p[thread_num];
+  //thread_chained_param param[thread_num];
+  //lmn_chained_hashmap_t chained_map;
+  //lmn_chained_init(&chained_map);
+
+  //start = gettimeofday_sec();
+  //for (int i = 0; i < thread_num; i++) {
+  //  param[i].map = &chained_map;
+  //  param[i].id = i;
+  //  param[i].thread_num = thread_num;
+  //  pthread_create(&p[i] , NULL, thread_chained_free, &param[i] );
+  //}
+  //for (int i = 0; i < thread_num; i++) {
+  //  pthread_join(p[i], NULL);
+  //}
+  //end = gettimeofday_sec();
+  //printf("lock-free chained hash map put find, %lf\n", end - start);
+  //lmn_chained_entry_t *ent2;
+  //lmn_chained_free(&chained_map, ent2, ({
+  //  lmn_free(ent2)      
+  //}));
   delete map;
 }
