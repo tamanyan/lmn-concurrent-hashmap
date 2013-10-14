@@ -34,6 +34,8 @@ double gettimeofday_sec(){
 #define ALG_NAME_LOCK_CLOSED_HASHMAP "lock_closed_hash"
 #define ALG_NAME_LOCK_FREE_CLOSED_HASHMAP "lock_free_closed_hash"
 
+__thread int _id;
+
 class HashMapTest : public Thread {
 private:
   static int count;
@@ -50,11 +52,12 @@ public:
   void Run() {
     int section = (MAX_KEY / HashMapTest::count);
     int offset  = section * id;
-    printf("Enter id: %d offset:%d last:%d\n",id, offset, offset+section-1);
+    //printf("Enter id: %d offset:%d last:%d\n",id, offset, offset+section-1);
     for (int i = offset; i < offset + section; i++) {
       map->Put(i, i);
     }
-    printf("End id: %d\n",id);
+    ;
+    printf("End id: %d\n", GetCurrentThreadId());
   }
 };
 

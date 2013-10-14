@@ -7,9 +7,15 @@
 #  define THREAD_H
 
 #include <pthread.h>
+#include <iostream>
+using namespace std;
+
+extern __thread int _thread_id;
 
 namespace lmntal {
 namespace concurrent {
+
+int GetCurrentThreadId();
 
 class Runnable {
 private:
@@ -24,11 +30,6 @@ class Thread : virtual public Runnable {
 private:
   Runnable *runnable;
   pthread_t threadID;
-  
-  static void *__Run(void *cthis) {
-    static_cast<Runnable*>(cthis)->Run();
-    return NULL;
-  }
   
 public:
   Thread() : runnable(NULL) {}

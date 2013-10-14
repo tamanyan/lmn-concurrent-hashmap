@@ -9,6 +9,7 @@
 #include <iostream>
 #include <functional>
 #include "hashmap.hpp"
+#include "../thread.h"
 using namespace std;
 
 namespace lmntal {
@@ -122,8 +123,7 @@ public:
     lmn_word     bucket;
     lmn_word     new_bucket_mask = new_size - 1;
 
-    int count = 0;
-    for(size_t i=0; i < new_size; ++i){new_tbl[i] = NULL;}
+    //dbgprint("extend old_size:%d, new_size:%d\n", old_size, new_size);
     for (int i = 0; i < old_size; i++) {
       ent = old_tbl[i];
       while (ent) {
@@ -253,18 +253,23 @@ template<typename Key, typename Value>
 class LockFreeChainHashMap : public ChainHashMap<Key, Value> {
 public:
   LockFreeChainHashMap(int num_thread) : in_thread(0), num_thread(num_thread), during_extend(0), ChainHashMap<Key, Value>() {
-    pthread_mutexattr_t mattr;
-    pthread_mutexattr_init(&mattr);
-    pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-    pthread_mutex_init(&mutex, &mattr);
+    mutexs = new pthread_mutex_t[num_thread];
+    pthread_mutexattr_t mattr[SECTION_SIZE];
+    for (int i = 0; i < SECTION_SIZE; i++) {
+      pthread_mutexattr_init(&mattr[i]);
+      pthread_mutexattr_setpshared(&mattr[i], PTHREAD_PROCESS_SHARED);
+      pthread_mutex_init(&mutexs[i], &mattr[i]);
+    }
   }
 
   ~LockFreeChainHashMap() {
+    delete mutexs;
   }
 
   Value& Get(const Key& key) {
     if (during_extend) {
-      pthread_mutex_lock(&mutex);
+      pthread_mutex_lock(&mutexs[GetCurrentThreadId() % num_thread]);
+      pthread_mutex_unlock(&mutexs[GetCurrentThreadId() % num_thread]);
     }
     LMN_ATOMIC_ADD(&(in_thread), 1);
 
@@ -276,34 +281,41 @@ public:
   }
 
   void Put(const Key& key, const Value& value) {
-    if (during_extend)
-      pthread_mutex_lock(&mutex);
+    if (during_extend) {
+      pthread_mutex_lock(&mutexs[GetCurrentThreadId() % num_thread]);
+      pthread_mutex_unlock(&mutexs[GetCurrentThreadId() % num_thread]);
+    }
     LMN_ATOMIC_ADD(&(in_thread), 1);
 
     lmn_word   bucket = hash<Key>(key) & this->bucket_mask;
     this->PutEntry(bucket, key, value);
 
     LMN_ATOMIC_SUB(&(in_thread), 1);
-    
     if (this->size > this->bucket_mask * 0.75) {
       Extend();
     }
   }
 
   void Extend() {
-    printf("Extend in_thread: %d\n", in_thread);
-    pthread_mutex_lock(&mutex);
+    for (int i = 0; i < num_thread; i++) {
+      pthread_mutex_lock(&mutexs[i]);
+    }
+    //printf("enter cs id: %d\n", GetCurrentThreadId() % num_thread);
+    int count = 0;
     if (this->size > this->bucket_mask * 0.75) {
       LMN_ATOMIC_ADD(&(during_extend), 1);
-      while(in_thread > 0) {}
+      //printf("enter Extend in_thread: %d\n", in_thread);
       ChainHashMap<Key, Value>::Extend();
+      //printf("end Extend in_thread: %d\n", in_thread);
       LMN_ATOMIC_SUB(&(during_extend), 1);
     }
-    pthread_mutex_unlock(&mutex);
+    for (int i = 0; i < num_thread; i++) {
+      pthread_mutex_unlock(&mutexs[i]);
+    }
   }
 
 protected:
-  pthread_mutex_t   mutex;
+  pthread_mutex_t*   mutexs;
   pthread_mutex_t   wait;
   int               during_extend;
   int               num_thread;
