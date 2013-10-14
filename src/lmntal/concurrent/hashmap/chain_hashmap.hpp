@@ -59,7 +59,7 @@ public:
         ent = next;
       }
     }
-    delete tbl;
+    delete[] tbl;
   }
 
   Value& Get(const Key& key) {
@@ -122,7 +122,7 @@ public:
     lmn_word     bucket;
     lmn_word     new_bucket_mask = new_size - 1;
 
-    dbgprint("extend old_size:%d, new_size:%d\n", old_size, new_size);
+    //dbgprint("extend old_size:%d, new_size:%d\n", old_size, new_size);
     for (int i = 0; i < old_size; i++) {
       ent = old_tbl[i];
       while (ent) {
@@ -238,7 +238,7 @@ public:
   }
 
   void Extend() {
-    printf("extend start %d\n", GetCurrentThreadId());
+    //printf("extend start %d\n", GetCurrentThreadId());
     int i, j;
     Entry<Key, Value> **assumed_table = this->tbl;
     for (i = 0; i < SECTION_SIZE; i++) {
@@ -247,13 +247,13 @@ public:
       pthread_mutex_lock(&mutexs[i]);
     }
     if (this->size > this->bucket_mask * 0.75 && i == SECTION_SIZE) {
-      printf("enter extend %d\n", GetCurrentThreadId());
+      //printf("enter extend %d\n", GetCurrentThreadId());
       ChainHashMap<Key, Value>::Extend();
     }
     for (j = 0; j < i; j++) {
       pthread_mutex_unlock(&mutexs[j]);
     }
-    printf("extend end %d\n", GetCurrentThreadId());
+    //printf("extend end %d\n", GetCurrentThreadId());
   }
 
 protected:
@@ -277,7 +277,7 @@ public:
   }
 
   ~LockFreeChainHashMap() {
-    delete mutexs;
+    delete[] mutexs;
   }
 
   Value& Get(const Key& key) {
@@ -346,7 +346,7 @@ protected:
       ent = ent->next;
       count++;
     }
-    printf("error entry key:%d count:%d\n", key, count);
+    //printf("error entry key:%d count:%d\n", key, count);
     return NULL;
   }
 
@@ -363,7 +363,7 @@ protected:
           new_ent->next = NULL;
         } else {
           new_ent->next = (*ent);
-          dbgprint("retry insert key:%d, data:%d\n", key, value);
+          //dbgprint("retry insert key:%d, data:%d\n", key, value);
         }
       } while(!LMN_CAS(&(*ent), tmp, new_ent));
     } else {
@@ -383,7 +383,7 @@ protected:
         if (new_ent == NULL) {
           new_ent = new Entry<Key, Value>();
         } else {
-          dbgprint("retry insert key:%d, data:%d\n", key, value);
+          //dbgprint("retry insert key:%d, data:%d\n", key, value);
         }
         new_ent->next = (*ent);
         // CAS target, old, new
@@ -394,7 +394,7 @@ protected:
     (*ent)->value = value;
     LMN_ATOMIC_ADD(&(this->size), 1);
     if (!FindEntry(bucket, key)) {
-      printf("error2 %d\n", key);
+      //printf("error2 %d\n", key);
     }
   }
 };
