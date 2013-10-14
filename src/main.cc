@@ -27,14 +27,12 @@ double gettimeofday_sec(){
   return (double)t.tv_sec + (double)t.tv_usec * 1e-6;
 }
 
-#define MAX_KEY (300000 * 12)
+#define MAX_KEY (30000 * 12)
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lock_chain_hash"
 #define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lock_free_chain_hash"
 #define ALG_NAME_LOCK_CLOSED_HASHMAP "lock_closed_hash"
 #define ALG_NAME_LOCK_FREE_CLOSED_HASHMAP "lock_free_closed_hash"
-
-__thread int _id;
 
 class HashMapTest : public Thread {
 private:

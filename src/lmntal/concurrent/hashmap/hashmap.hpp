@@ -21,7 +21,7 @@ using namespace std;
 #define LMN_HASH_EMPTY_KEY  0
 
 //#define LMN_DEFAULT_SIZE    16777216
-#define LMN_DEFAULT_SIZE    1024
+#define LMN_DEFAULT_SIZE    1024 * 32
 
 typedef unsigned long       lmn_word;
 
@@ -39,7 +39,7 @@ public:
   virtual void Put(const Key& key, const Value& value) = 0;
   virtual bool Exist(const Key& key) = 0;
   virtual void Extend() = 0;
-  virtual uint64_t Size() = 0;
+  virtual long Size() = 0;
   virtual int Count() = 0;
 
 protected:

@@ -14,8 +14,6 @@ typedef u32 lmn_hash_t;
 #define LMN_HASH_EMPTY_DATA 0
 #define LMN_HASH_EMPTY_KEY  0
 
-#ifndef __linux__
-
 inline lmn_hash_t lmn_hash_calc(lmn_key_t key) {
 #ifdef __x86_64__
   /* Robert Jenkins' 32 bit Mix Function */
@@ -48,8 +46,6 @@ inline int lmn_hash_eq(lmn_hash_t h1, lmn_hash_t h2) {
 inline int lmn_hash_key_eq(lmn_hash_t key1, lmn_hash_t key2) {
   return key1 == key2;
 }
-
-#endif
 
 #endif /* ifndef LMN_HASH_H */
 
