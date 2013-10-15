@@ -12,8 +12,8 @@
 #include "map/lmn_map.h"
 #include "map/lmn_closed_hashmap.h"
 #include "map/lmn_chained_hashmap.h"
-#include "lmntal/concurrent/hashmap/hashmap.hpp"
-#include "lmntal/concurrent/hashmap/chain_hashmap.hpp"
+#include "lmntal/concurrent/hashmap/concurrent_chain_hashmap.hpp"
+#include "lmntal/concurrent/hashmap/lock_free_chain_hashmap.hpp"
 #include "lmntal/concurrent/thread.h"
 #include <unistd.h>
 #include <iostream>
@@ -128,35 +128,10 @@ int main(int argc, char **argv){
         break;
     }
   }
-  
-  /*pthread_t p[thread_num];
-  thread_chained_param param[thread_num];
-  lmn_chained_hashmap_t chained_map;
-  lmn_chained_init(&chained_map);
-
-  start = gettimeofday_sec();
-  for (int i = 0; i < thread_num; i++) {
-    param[i].map = &chained_map;
-    param[i].id = i;
-    param[i].thread_num = thread_num;
-    pthread_create(&p[i] , NULL, thread_chained_free, &param[i] );
-  }
-  for (int i = 0; i < thread_num; i++) {
-    pthread_join(p[i], NULL);
-  }
-  end = gettimeofday_sec();
-  printf("lock-free chained hash map put find, %lf\n", end - start);
-  lmn_chained_entry_t *ent2;
-  lmn_chained_free(&chained_map, ent2, ({
-        lmn_free(ent2)      
-        }));
-
-  return 0;*/
-
   if (algrithm[0] == 0x00) {
     strcpy(algrithm, ALG_NAME_LOCK_CHAINED_HASHMAP);
   }
-  HashMap<int, int> *map;
+  HashMap<int, int> *map = NULL;
 
   if (strcmp(ALG_NAME_LOCK_CHAINED_HASHMAP, algrithm) == 0) {
     map = new ConcurrentChainHashMap<int, int>();
@@ -165,21 +140,45 @@ int main(int argc, char **argv){
     map = new LockFreeChainHashMap<int, int>(thread_num);
     cout << "LockFreeChainHashMap" << endl;
   } else if (strcmp(ALG_NAME_LOCK_FREE_CLOSED_HASHMAP, algrithm) == 0) {
+    pthread_t p[thread_num];
+    thread_chained_param param[thread_num];
+    lmn_chained_hashmap_t chained_map;
+    lmn_chained_init(&chained_map);
+
+    start = gettimeofday_sec();
+    for (int i = 0; i < thread_num; i++) {
+      param[i].map = &chained_map;
+      param[i].id = i;
+      param[i].thread_num = thread_num;
+      pthread_create(&p[i] , NULL, thread_chained_free, &param[i] );
+    }
+    for (int i = 0; i < thread_num; i++) {
+      pthread_join(p[i], NULL);
+    }
+    end = gettimeofday_sec();
+    printf("lock-free chained hash map put find, %lf\n", end - start);
+    lmn_chained_entry_t *ent2;
+    lmn_chained_free(&chained_map, ent2, ({
+          lmn_free(ent2)      
+    }));
   }
-  start = gettimeofday_sec();
-  HashMapTest *threads = new HashMapTest[thread_num];
-  for (int i = 0; i < thread_num; i++) {
-    threads[i].initialize(map);
-    threads[i].Start();
+
+  if (map != NULL) {
+    start = gettimeofday_sec();
+    HashMapTest *threads = new HashMapTest[thread_num];
+    for (int i = 0; i < thread_num; i++) {
+      threads[i].initialize(map);
+      threads[i].Start();
+    }
+    for (int i = 0; i < thread_num; i++) {
+      threads[i].Join();
+    }
+    end = gettimeofday_sec();
+    printf("%lf\n", end - start);
+    //for (int i = 0; i < MAX_KEY; i++) {
+    //  if (!map->Exist(i))
+    //    cout << "not found " << i << endl;
+    //}
+    //cout << map->Count() << endl;
   }
-  for (int i = 0; i < thread_num; i++) {
-    threads[i].Join();
-  }
-  end = gettimeofday_sec();
-  printf("%lf\n", end - start);
-  for (int i = 0; i < MAX_KEY; i++) {
-    if (!map->Exist(i))
-      cout << "not found " << i << endl;
-  }
-  cout << map->Count() << endl;
 }

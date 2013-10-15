@@ -152,9 +152,16 @@ void lmn_chained_free_put(lmn_chained_hashmap_t *map, lmn_key_t key, lmn_data_t 
   lmn_chained_entry_t **ent    = &map->tbl[bucket];
 
   if ((*ent) == LMN_HASH_EMPTY) {
-    (*ent) = lmn_malloc(1, lmn_chained_entry_t);
-    (*ent)->next = NULL;
-    //dbgprint("insert new key:%d, data:%d\n", key, data);
+    lmn_chained_entry_t *tmp, *new_ent = NULL;
+    do {
+      tmp = *ent;
+      if (new_ent == NULL) {
+        new_ent = lmn_malloc(1, lmn_chained_entry_t);
+        new_ent->next = NULL;
+      } else {
+        new_ent->next = (*ent);
+      }
+    } while(!LMN_CAS(&(*ent), tmp, new_ent));
   } else {
     lmn_chained_entry_t *cur, *tmp, *new_ent = NULL;
     cur = *ent;

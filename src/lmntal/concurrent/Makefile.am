@@ -6,4 +6,5 @@ liblmn_concurrent_a_SOURCES = \
 							 thread.cc thread.h \
 						   hashmap/hash.hpp \
 						   hashmap/hashmap.hpp \
-							 hashmap/chain_hashmap.hpp
+							 hashmap/chain_hashmap.hpp hashmap/concurrent_chain_hashmap.hpp \
+							 hashmap/lock_free_chain_hashmap.hpp

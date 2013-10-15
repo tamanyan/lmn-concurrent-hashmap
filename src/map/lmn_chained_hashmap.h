@@ -9,7 +9,6 @@
 #include "lmn_hash.h"
 #include "lmn_map_util.h"
 
-
 typedef struct _lmn_chained_entry_t {
   lmn_key_t                    volatile key;
   lmn_data_t                   volatile data;
