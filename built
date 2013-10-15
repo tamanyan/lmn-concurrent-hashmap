@@ -1,4 +1,10 @@
 #!/bin/bash
+BASE_DIR=`pwd`
+export DYLD_LIBRARY_PATH="${BASE_DIR}/src/third_party/gperftools-2.1/.libs"
+echo "DYLD_LIBRARY_PATH=${BASE_DIR}/src/third_party/gperftools-2.1/.libs"
+export LD_PRELOAD="${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"
+echo "LD_PRELOAD=${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"
+exit
 
 autoreconf -i
 ./configure --enable-tcmalloc
@@ -9,8 +15,3 @@ cd gperftools-2.1/
 make
 cd ../../../
 make
-BASE_DIR=`pwd`
-export DYLD_LIBRARY_PATH="${BASE_DIR}/src/third_party/gperftools-2.1/.libs"
-echo "DYLD_LIBRARY_PATH=${BASE_DIR}/src/third_party/gperftools-2.1/.libs"
-export LD_PRELOAD="${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"
-echo "LD_PRELOAD=${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"

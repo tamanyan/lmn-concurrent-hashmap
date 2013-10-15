@@ -10,10 +10,9 @@ AC_CONFIG_HEADERS([config.h])
 #if test -z $CFLAGS; then
 #    CXFLAGS='-O2'
 #fi
-OPTIMIZER_CFLAGS="-O2"
-OPTIMIZER_CXXFLAGS="-O2"
+#OPTIMIZER_CFLAGS="-O2"
+#OPTIMIZER_CXXFLAGS="-O2"
 
-CFLAGS="$CFLAGS -std=gnu++0x"
 
 # Checks for programs.
 AC_PROG_CXX
@@ -38,6 +37,27 @@ AC_ARG_ENABLE([tcmalloc],
               [enable_tcmalloc="$default_enable_tcmalloc"])
 
 AM_CONDITIONAL(ENABLE_TCMALLOC, test "$enable_tcmalloc" = "yes")
+
+default_enable_debug=no
+
+AC_ARG_ENABLE([debug],                                                                                                                               
+              [AS_HELP_STRING([--enable-debug],
+                              [enable debugging, default: no])],
+              [], 
+              [enable_debug="$default_enable_debug"])
+
+AM_CONDITIONAL(DEBUG, test "$enable_debug" = "yes")
+
+if test "$enable_debug" = "yes"; then
+CFLAGS="-g3 -O0"
+CXXFLAGS="-g3 -O0"
+else
+CFLAGS="-O2"
+CXXFLAGS="-O2"
+fi
+
+
+CFLAGS="$CFLAGS -std=gnu++0x"
 
 # Checks for library functions.
 

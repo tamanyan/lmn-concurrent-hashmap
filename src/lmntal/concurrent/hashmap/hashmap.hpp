@@ -20,7 +20,8 @@ using namespace std;
 #define LMN_HASH_EMPTY_DATA 0
 #define LMN_HASH_EMPTY_KEY  0
 
-#define LMN_DEFAULT_SIZE    16777216
+//#define LMN_DEFAULT_SIZE    16777216
+#define LMN_DEFAULT_SIZE (32 * 1024 * 1024)
 //#define LMN_DEFAULT_SIZE    1024 * 32
 
 typedef unsigned long       lmn_word;

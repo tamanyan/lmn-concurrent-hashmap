@@ -266,7 +266,7 @@ protected:
 template<typename Key, typename Value>
 class LockFreeChainHashMap : public ChainHashMap<Key, Value> {
 public:
-  LockFreeChainHashMap(int num_thread) : in_thread(0), num_thread(num_thread), during_extend(0), ChainHashMap<Key, Value>() {
+  LockFreeChainHashMap(int num_thread) : num_thread(num_thread), during_extend(0), ChainHashMap<Key, Value>() {
     mutexs = new pthread_mutex_t[num_thread];
     pthread_mutexattr_t mattr[SECTION_SIZE];
     for (int i = 0; i < SECTION_SIZE; i++) {
@@ -285,12 +285,10 @@ public:
       pthread_mutex_lock(&mutexs[GetCurrentThreadId() % num_thread]);
       pthread_mutex_unlock(&mutexs[GetCurrentThreadId() % num_thread]);
     }
-    LMN_ATOMIC_ADD(&(in_thread), 1);
 
     lmn_word   bucket = hash<Key>(key) & this->bucket_mask;
     Entry<Key, Value> *ent = this->FindEntry(bucket, key);
 
-    LMN_ATOMIC_SUB(&(in_thread), 1);
     return ent != NULL ? ent->value : this->empty_value;
   }
 
@@ -299,12 +297,10 @@ public:
       pthread_mutex_lock(&mutexs[GetCurrentThreadId() % num_thread]);
       pthread_mutex_unlock(&mutexs[GetCurrentThreadId() % num_thread]);
     }
-    LMN_ATOMIC_ADD(&(in_thread), 1);
 
     lmn_word   bucket = hash<Key>(key) & this->bucket_mask;
     this->PutEntry(bucket, key, value);
 
-    LMN_ATOMIC_SUB(&(in_thread), 1);
     if (this->size > this->bucket_mask * 0.75) {
       Extend();
     }
@@ -314,13 +310,11 @@ public:
     for (int i = 0; i < num_thread; i++) {
       pthread_mutex_lock(&mutexs[i]);
     }
-    //printf("enter cs id: %d\n", GetCurrentThreadId() % num_thread);
+    printf("enter cs id: %d\n", GetCurrentThreadId() % num_thread);
     int count = 0;
     if (this->size > this->bucket_mask * 0.75) {
       LMN_ATOMIC_ADD(&(during_extend), 1);
-      //printf("enter Extend in_thread: %d\n", in_thread);
       ChainHashMap<Key, Value>::Extend();
-      //printf("end Extend in_thread: %d\n", in_thread);
       LMN_ATOMIC_SUB(&(during_extend), 1);
     }
     for (int i = 0; i < num_thread; i++) {
@@ -333,7 +327,6 @@ protected:
   pthread_mutex_t   wait;
   int               during_extend;
   int               num_thread;
-  int               in_thread;
 
   Entry<Key, Value>* FindEntry(lmn_word bucket, Key key) {
     Entry<Key, Value> *ent      = this->tbl[bucket];
@@ -392,7 +385,7 @@ protected:
     }
     (*ent)->key  = key;
     (*ent)->value = value;
-    LMN_ATOMIC_ADD(&(this->size), 1);
+    //LMN_ATOMIC_ADD(&(this->size), 1);
     if (!FindEntry(bucket, key)) {
       //printf("error2 %d\n", key);
     }
