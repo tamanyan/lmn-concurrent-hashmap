@@ -1,4 +1,4 @@
-SUBDIRS = map
+SUBDIRS = map lmntal/concurrent
 
 bin_PROGRAMS = benchmark
 
