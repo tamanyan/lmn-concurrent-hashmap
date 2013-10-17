@@ -49,19 +49,18 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL(DEBUG, test "$enable_debug" = "yes")
 
 if test "$enable_debug" = "yes"; then
-CFLAGS="-g3 -O0"
-CXXFLAGS="-g3 -O0"
+CFLAGS="-g3 -O0 -pg"
+CXXFLAGS="-g3 -O0 -pg"
 else
 CFLAGS="-O2"
 CXXFLAGS="-O2"
 fi
 
 
-CFLAGS="$CFLAGS -std=gnu++0x"
-
 # Checks for library functions.
 
 AC_OUTPUT(Makefile \
           src/map/Makefile
           src/lmntal/concurrent/Makefile
+          src/third_party/nbds/Makefile
           src/Makefile)

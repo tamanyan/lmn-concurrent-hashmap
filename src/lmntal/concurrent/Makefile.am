@@ -4,7 +4,7 @@ liblmn_concurrent_a_CFLAGS = $(CFLAGS) -I ./hashmap
 
 liblmn_concurrent_a_SOURCES = \
 							 thread.cc thread.h \
-						   hashmap/hash.hpp \
-						   hashmap/hashmap.hpp \
-							 hashmap/chain_hashmap.hpp hashmap/concurrent_chain_hashmap.hpp \
-							 hashmap/lock_free_chain_hashmap.hpp
+						   hashmap/hashmap.cc hashmap/hashmap.h \
+						   hashmap/cc_hashmap.cc hashmap/cc_hashmap.h \
+							 hashmap/chain_hashmap.cc hashmap/chain_hashmap.h \
+							 hashmap/lf_chain_hashmap.cc hashmap/lf_chain_hashmap.h
