@@ -1,5 +1,5 @@
 /**
- * @file   lmn_closed_hashmap.c
+ * @file   lmn_closed_hashmap.cc
  * @brief  
  * @author Taketo Yoshida
  */

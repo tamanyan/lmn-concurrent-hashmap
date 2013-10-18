@@ -31,11 +31,11 @@ inline lmn_word cc_hashmap_find_free_bucket(cc_hashmap_t *map, lmn_key_t key) {
     assert(key != CC_INVALID_BUCKET);
   }
 
-  call_count++;
+  //call_count++;
   while (count < THRESHOLD) {
     // Walk Cache line
     for (int i = 0; i < CC_CACHE_LINE_SIZE_FOR_UNIT64; i++) {
-      prob_count++;
+      //prob_count++;
       if (buckets[(offset + i) & mask] == CC_INVALID_BUCKET)  {
         return (offset + i) & mask;
       }
@@ -102,8 +102,8 @@ void cc_hashmap_put(cc_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
 
   if (index != CC_PROB_FAIL && map->buckets[index] == CC_INVALID_BUCKET) {
     if (!LMN_CAS(&map->buckets[index], CC_INVALID_BUCKET, data)) {
-      printf("insert fail retry key:%d, index:%d\n", key, index);
-      cc_hashmap_put(map, key, data);
+      //printf("insert fail retry key:%d, index:%d\n", key, index);
+      //cc_hashmap_put(map, key, data);
       return ;
     } else {
       //printf("insert key:%d, index:%d\n", key, index);

@@ -4,7 +4,6 @@ bin_PROGRAMS = benchmark
 
 benchmark_CFLAGS = $(CFLAG) -std=c99 -Wall
 benchmark_LDFLAGS = -L./map  -L./lmntal/concurrent
-INCLUDES = -I./map -I./lmntal/concurrent -I./third_party/nbds/include
 benchmark_DEPENDENCIES = ./map/liblmn_map.a ./lmntal/concurrent/liblmn_concurrent.a 
 
 benchmark_LDADD = -llmn_map -llmn_concurrent -lpthread 

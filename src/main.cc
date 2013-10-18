@@ -8,14 +8,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include "lmntal/concurrent/hashmap/chain_hashmap.h"
 #include "lmntal/concurrent/hashmap/lf_chain_hashmap.h"
 #include "lmntal/concurrent/hashmap/cc_hashmap.h"
 #include "lmntal/concurrent/thread.h"
 #include <iostream>
+#include <time.h>
+
+#define uint64_t long long
 
 using namespace std;
 using namespace lmntal::concurrent::hashmap;
@@ -28,6 +33,7 @@ double gettimeofday_sec(){
 }
 
 #define MAX_KEY (300000 * 12)
+#define COUNT (1 << 20)
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lch"
 #define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lfch"
@@ -35,7 +41,6 @@ double gettimeofday_sec(){
 
 static int num_threads_;
 static volatile int start_, stop_, load_;
-static hashmap_t map_;
 static double load_time_;
 static int duration_;
 
@@ -51,81 +56,24 @@ public:
 
   void initialize(hashmap_t *hashmap) {
     map = hashmap;
+    srand((unsigned)time(NULL));
   }
 
   void Run() {
-    int rand_val;
-    printf("Enter id: %d \n",id);
-    srand((unsigned)time(NULL));
+    int section = (COUNT / HashMapTest::count);
+    int offset  = section * id + 1; 
+    double test = 0;
+    printf("Enter section: %d \n",section);
     do {} while(start_);
-    while(!stop_) {
-      rand_val = rand();
-      ops_count++;
-      //hashmap_put(map, rand_val, (lmn_data_t)rand_val);
-      count++;
+    for (int i = offset; i < offset + section; i++) {
+        test+=0.01;
+      //hashmap_find(map, i);
     }
-    printf("End id: %d\n", GetCurrentThreadId());
+    printf("End id: %d, %.2lf\n", GetCurrentThreadId(), test);
   }
 };
 
 int HashMapTest::count = 0;
-
-static volatile int test;
-
-void *worker (void *arg) {
-    // Wait for all the worker threads to be ready.
-    (void)LMN_ATOMIC_ADD(&load_, -1);
-    do {} while (load_);
-
-    // Wait for all the worker threads to be done loading.
-    (void)LMN_ATOMIC_ADD(&start_, -1);
-    do {} while (start_);
-
-    uint64_t ops = 0;
-    int rand_val = 0;
-    while (!stop_) {
-        ++ops;
-        hashmap_put(&map_, rand_val, (lmn_data_t)rand_val);
-    }
-
-    return (void *)ops;
-}
-
-uint64_t run_test (void) {
-    load_ = num_threads_ + 1;
-    start_ = num_threads_ + 1;
-
-    stop_ = 0;
-
-    pthread_t thread[num_threads_];
-    for (int i = 0; i < num_threads_; ++i) {
-        int rc = pthread_create(thread + i, NULL, worker, (void*)(size_t)i);
-        if (rc != 0) { perror("pthread_create"); exit(rc); }
-    }
-
-    do { /* nothing */ } while (load_ != 1);
-    load_ = 0;
-
-    struct timeval tv1, tv2;
-    gettimeofday(&tv1, NULL);
-
-    do { /* nothing */ } while (start_ != 1);
-
-    gettimeofday(&tv2, NULL);
-    load_time_ = (double)(1000000*(tv2.tv_sec - tv1.tv_sec) + tv2.tv_usec - tv1.tv_usec) / 1000000;
-
-    start_ = 0;
-    sleep(duration_);
-    stop_ = 1;
-
-    uint64_t ops = 0;
-    for (int i = 0; i < num_threads_; ++i) {
-        void *count;
-        pthread_join(thread[i], &count);
-        ops += (size_t)count;
-    }
-    return ops;
-}
 
 int main(int argc, char **argv){
 
@@ -165,42 +113,40 @@ int main(int argc, char **argv){
     strcpy(algrithm, ALG_NAME_LOCK_CHAINED_HASHMAP);
   }
 
+  hashmap_t map;
   if (strcmp(ALG_NAME_LOCK_CHAINED_HASHMAP, algrithm) == 0) {
     cout << "ConcurrentChainHashMap" << endl;
-    hashmap_init(&map_, LMN_CLOSED_ADDRESSING);
+    hashmap_init(&map, LMN_CLOSED_ADDRESSING);
   } else if (strcmp(ALG_NAME_LOCK_FREE_CHAINED_HASHMAP, algrithm) == 0) {
     cout << "LockFreeChainHashMap" << endl;
-    hashmap_init(&map_, LMN_LOCK_FREE_CLOSED_ADDRESSING);
+    hashmap_init(&map, LMN_LOCK_FREE_CLOSED_ADDRESSING);
   } else if (strcmp(ALG_NAME_CC_HASHMAP, algrithm) == 0) {
     cout << "Cliff Click HashMap For Model Checking" << endl;
-    hashmap_init(&map_, LMN_MC_CLIFF_CLICK);
+    hashmap_init(&map, LMN_MC_CLIFF_CLICK);
   }
-  srand((unsigned)time(NULL));
-  duration_ = 3;
-  double mops_per_sec = (double)run_test() / 1000000.0 / duration_;
-
-  hashmap_free(&map_);
-  printf("Threads:%-2d  load time:%-4.2f  Mops/s:%-4.2f  per-thread:%-4.2f \n",
-      num_threads_, load_time_, mops_per_sec, mops_per_sec/num_threads_);
-  //if (map.data) {
-  //  HashMapTest *threads = new HashMapTest[thread_num];
-  //  start_ = 1;
-  //  for (int i = 0; i < thread_num; i++) {
-  //    threads[i].initialize(&map);
-  //  }
-  //  for (int i = 0; i < thread_num; i++) {
-  //    threads[i].Start();
-  //  }
-
-  //  for (int i = 0; i < thread_num; i++) {
-  //    threads[i].Join();
-  //    ops_count += threads[i].ops_count;
-  //  }
-  //  printf("ops_count:%d, %.1lf Mops/s %lf per-thread\n", ops_count, (float)ops_count/(during*1000000.0), (float)ops_count/(during*1000000.0));
-  //  //for (int i = 0; i < MAX_KEY; i++) {
-  //  //  if (!map->st(i))
-  //  //    cout << "not found " << i << endl;
-  //  //}
-  //  //cout << map->Count() << endl;
-  //}
+  if (map.data) {
+    HashMapTest *threads = new HashMapTest[thread_num];
+    for (int i = 0; i < thread_num; i++) {
+      threads[i].initialize(&map);
+    }
+    start_ = 0;
+    for (int i = 0; i < thread_num; i++) {
+      threads[i].Start();
+    }
+    usleep(100000);
+    start_ = 1;
+    double start = gettimeofday_sec();
+    for (int i = 0; i < thread_num; i++) {
+      threads[i].Join();
+    }
+    double end = gettimeofday_sec();
+    load_time_ = end - start;
+    printf("%lf\n", load_time_);
+    printf("Mops/s %lf per-thread %lf\n", (double)COUNT / load_time_ , (float)COUNT/load_time_);
+    //for (int i = 0; i < MAX_KEY; i++) {
+    //  if (!map->st(i))
+    //    cout << "not found " << i << endl;
+    //}
+    //cout << map->Count() << endl;
+  }
 }

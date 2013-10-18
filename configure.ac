@@ -62,5 +62,4 @@ fi
 AC_OUTPUT(Makefile \
           src/map/Makefile
           src/lmntal/concurrent/Makefile
-          src/third_party/nbds/Makefile
           src/Makefile)
