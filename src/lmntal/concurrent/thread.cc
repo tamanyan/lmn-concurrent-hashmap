@@ -18,6 +18,10 @@ int GetCurrentThreadId() {
   return _thread_id;
 }
 
+int GetCurrentThreadCount() {
+  return _thread_count;
+}
+
 void* __Run(void *cthis) {
   _thread_id = _thread_count++;
   static_cast<Runnable*>(cthis)->Run();

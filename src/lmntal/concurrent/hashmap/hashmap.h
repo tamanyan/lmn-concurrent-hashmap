@@ -12,11 +12,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 using namespace std;
 
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_ATOMIC_ADD(ptr, v)       __sync_fetch_and_add(ptr, v)
 #define LMN_ATOMIC_SUB(ptr, v)       __sync_fetch_and_sub(ptr, v)
+
+#define LMN_LIKELY(x)    __builtin_expect(!!(x), 1)
+#define LMN_UNLIKELY(x)  __builtin_expect(!!(x), 0)
+
+#define LMN_PREFETCH(addr, rw, locality) __builtin_prefetch(addr, rw, locality)
+
+#define LMN_DEBUG 1
+
+#ifdef LMN_DEBUG
+#define LMN_ASSERT(expr) assert(expr);
+#else
+#define LMN_ASSERT(expr) (NULL)
+#endif
 
 #define LMN_HASH_EMPTY      0
 #define LMN_HASH_BUSY       1

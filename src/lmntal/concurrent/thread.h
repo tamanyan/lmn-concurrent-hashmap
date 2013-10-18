@@ -16,6 +16,7 @@ namespace lmntal {
 namespace concurrent {
 
 int GetCurrentThreadId();
+int GetCurrentThreadCount();
 
 class Runnable {
 private:
