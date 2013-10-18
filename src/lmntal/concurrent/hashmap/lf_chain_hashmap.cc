@@ -74,7 +74,7 @@ void lf_chain_put(chain_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
   }
   (*ent)->key  = key;
   (*ent)->data = data;
-  LMN_ATOMIC_ADD(&(map->size), 1);
+  //LMN_ATOMIC_ADD(&(map->size), 1);
 }
 
 }

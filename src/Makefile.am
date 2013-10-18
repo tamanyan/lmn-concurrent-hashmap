@@ -6,7 +6,7 @@ benchmark_CFLAGS = $(CFLAG) -std=c99 -Wall
 benchmark_LDFLAGS = -L./map  -L./lmntal/concurrent
 benchmark_DEPENDENCIES = ./map/liblmn_map.a ./lmntal/concurrent/liblmn_concurrent.a 
 
-benchmark_LDADD = -llmn_map -llmn_concurrent -lpthread 
+benchmark_LDADD = -llmn_map -llmn_concurrent -lpthread -lrt
 
 if ENABLE_TCMALLOC
 benchmark_LDFLAGS += -L./third_party/gperftools-2.1/.libs

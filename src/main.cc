@@ -33,7 +33,7 @@ double gettimeofday_sec(){
 }
 
 #define MAX_KEY (300000 * 12)
-#define COUNT (1 << 20)
+#define COUNT (1 << 17)
 
 #define ALG_NAME_LOCK_CHAINED_HASHMAP "lch"
 #define ALG_NAME_LOCK_FREE_CHAINED_HASHMAP "lfch"
@@ -44,15 +44,21 @@ static volatile int start_, stop_, load_;
 static double load_time_;
 static int duration_;
 
+double second_high_resolution(clockid_t clockid) {
+  timespec ts;
+  clock_gettime(clockid, &ts);
+  return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
+
 class HashMapTest : public Thread {
 private:
   static int count;
   int id;
 public:
   hashmap_t* map;
-  int ops_count;
+  double cpu_time;
   
-  HashMapTest() : ops_count(0), id(HashMapTest::count++), Runnable() {}
+  HashMapTest() : cpu_time(0), id(HashMapTest::count++), Runnable() {}
 
   void initialize(hashmap_t *hashmap) {
     map = hashmap;
@@ -65,11 +71,19 @@ public:
     double test = 0;
     printf("Enter section: %d \n",section);
     do {} while(start_);
-    for (int i = offset; i < offset + section; i++) {
-        test+=0.01;
-      //hashmap_find(map, i);
+    clockid_t clock;
+    double start, end;
+    if (pthread_getcpuclockid(pthread_self(), &clock) != 0){
+      printf("error\n");
     }
-    printf("End id: %d, %.2lf\n", GetCurrentThreadId(), test);
+    start = second_high_resolution(clock);
+    for (int i = offset; i < offset + section; i++) {
+    //for (int i = 0; i < COUNT; i++) {
+      hashmap_put(map, i, (lmn_data_t)i);
+    }
+    end = second_high_resolution(clock);
+    cpu_time = end - start;
+    printf("End id: %d, cpu_time:%lf\n", id, cpu_time);
   }
 };
 
@@ -136,13 +150,16 @@ int main(int argc, char **argv){
     usleep(100000);
     start_ = 1;
     double start = gettimeofday_sec();
+    double cpu_time = 0;
     for (int i = 0; i < thread_num; i++) {
       threads[i].Join();
+      cpu_time += threads[i].cpu_time;
     }
+    cpu_time /= thread_num;
     double end = gettimeofday_sec();
     load_time_ = end - start;
-    printf("%lf\n", load_time_);
-    printf("Mops/s %lf per-thread %lf\n", (double)COUNT / load_time_ , (float)COUNT/load_time_);
+    printf("Mops/s %lf per-thread %lf\n", ((double)COUNT / cpu_time) / 1000000.0 , ((double)COUNT/cpu_time) / 1000000.0);
+    hashmap_free(&map);
     //for (int i = 0; i < MAX_KEY; i++) {
     //  if (!map->st(i))
     //    cout << "not found " << i << endl;
