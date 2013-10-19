@@ -80,9 +80,7 @@ public:
     for (int i = offset; i < offset + section; i++) {
     //for (int i = 0; i < COUNT; i++) {
       hashmap_put(map, i, (lmn_data_t)i);
-      if (hashmap_find(map, i) == (lmn_data_t)-1) {
-        printf("fail find\n");
-      }
+      LMN_ASSERT(!(hashmap_find(map, i) == (lmn_data_t)-1 ||hashmap_find(map, i) == (lmn_data_t)i));
     }
     end = second_high_resolution(clock);
     cpu_time = end - start;
