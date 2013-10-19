@@ -27,10 +27,10 @@ static const hashmap_impl_t LF_CHAIN_HASHMAP_IMPL_HT = {
 };
 
 static const hashmap_impl_t CC_HASHMAP_IMPL_HT = { 
-  (hashmap_find_t)cc_hashmap_find,
-  (hashmap_put_t)cc_hashmap_put,
-  (hashmap_init_t)cc_hashmap_init,
-  (hashmap_free_t)cc_hashmap_free,
+  (hashmap_find_t)lmn_hashmap_find,
+  (hashmap_put_t)lmn_hashmap_put,
+  (hashmap_init_t)lmn_hashmap_init,
+  (hashmap_free_t)lmn_hashmap_free,
 };
 
 void hashmap_init(hashmap_t *map, hashmap_type_t type) {
@@ -44,7 +44,7 @@ void hashmap_init(hashmap_t *map, hashmap_type_t type) {
       map->impl = LF_CHAIN_HASHMAP_IMPL_HT;
       break;
     case LMN_MC_CLIFF_CLICK:
-      map->data = lmn_malloc(cc_hashmap_t);
+      map->data = lmn_malloc(lmn_hashmap_t);
       map->impl = CC_HASHMAP_IMPL_HT;
       break;
   }

@@ -25,7 +25,7 @@ using namespace lmntal::concurrent;
 #define CC_PROB_FAIL -1
 #define CC_DOES_NOT_EXIST 0  // 000000...
 #define CC_COPIED_VALUE ((lmn_data_t)(TAG_VALUE(CC_DOES_NOT_EXIST, TAG1))) // 100000...
-#define THRESHOLD 2
+#define THRESHOLD 3
 
 int call_count = 0;
 int prob_count = 0;
@@ -41,15 +41,17 @@ inline void cc_hashmap_inc_count(cc_hashmap_t *map) {
   //map->count[GetCurrentThreadId()]++;
 }
 
+inline lmn_word cc_hashmap_tbl_size(cc_hashmap_t *map) { return map->bucket_mask + 1; }
+
 void cc_hashmap_print(cc_hashmap_t *map, int content) {
-  printf("addr:%p ", map);
-  printf("next:%p ", map->next);
-  printf("tbl-size:%d\n", cc_hashmap_tbl_size(map));
-  printf("copy_scan:%d ", map->copy_scan);
-  printf("num_entries_copied:%d\n", map->num_entries_copied);
+  LMN_DBG_V("addr:%p ", map);
+  LMN_DBG_V("next:%p ", map->next);
+  LMN_DBG_V("tbl-size:%d\n", cc_hashmap_tbl_size(map));
+  LMN_DBG_V("copy_scan:%d ", map->copy_scan);
+  LMN_DBG_V("num_entries_copied:%d\n", map->num_entries_copied);
   if (content) {
     for (int i = 0; i < 10; i++) {
-      printf("[%d]:[%d]\n", map->buckets[i], map->data[i]);
+      LMN_DBG_V("[%d]:[%d]\n", map->buckets[i], map->data[i]);
     }
   }
 }
@@ -139,17 +141,22 @@ inline void cc_hashmap_init_inner(cc_hashmap_t *map, lmn_word scale) {
   map->bucket_mask  = scale - 1;
   map->count        = lmn_calloc(int, thread_count);
   map->copy_scan    = 0;
+  map->copy         = 0;
   map->num_entries_copied = 0;
   memset((void*)map->buckets, CC_DOES_NOT_EXIST, sizeof(lmn_key_t)*scale);
 }
 
 static void cc_hashmap_start_copy(cc_hashmap_t *map) {
-  int new_scale = (map->bucket_mask + 1) << 1;
-  cc_hashmap_t *next = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_init_inner(next, new_scale);
-  if (!LMN_CAS(&map->next, NULL, next)) {
-    // another thread copy
-    lmn_free(next);
+  if (map->copy == FALSE && LMN_CAS(&map->copy, FALSE, TRUE)) {
+    LMN_DBG("[debug] cc_hashmap_start_copy: start to copy\n");
+    cc_hashmap_print(map, 0);
+    int new_scale = (map->bucket_mask + 1) << 1;
+    cc_hashmap_t *next = lmn_malloc(cc_hashmap_t);
+    cc_hashmap_init_inner(next, new_scale);
+    if (!LMN_CAS(&map->next, NULL, next)) {
+      // another thread copy
+      lmn_free(next);
+    }
   }
 }
 
@@ -193,7 +200,7 @@ static int cc_hashmap_copy_entry(cc_hashmap_t *original, lmn_word index, lmn_wor
 
   if (rep_is_empty) {
     if (!LMN_CAS(&replica->buckets[rep_index], CC_DOES_NOT_EXIST, LMN_PTR_VAL(org_key))) {
-      printf("retry copy entry\n");
+      //printf("retry copy entry\n");
       return cc_hashmap_copy_entry(original, index, key_hash, replica); // retry recursive tail-call
     }
   }
@@ -262,7 +269,6 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
 
   if (LMN_UNLIKELY(index == CC_PROB_FAIL)) {
     if (map->next == NULL) {
-      printf("start to copy\n");
       cc_hashmap_start_copy(map);
     }
     return CC_COPIED_VALUE;
@@ -276,7 +282,7 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
     //LMN_CAS(&(map->size), map->size, map->size + 1);
     cc_hashmap_inc_count(map);
   } else {
-    printf("not empty\n");
+    // LMN_DBG("not empty\n");
     return (lmn_data_t)-1;
   }
   /*lmn_word index = cc_hashmap_find_free_bucket(map, key);
@@ -301,14 +307,35 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
   }*/
   return data;
 }
+
+lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
+  lmn_word index = cc_hashmap_find_bucket(map, key);
+
+  if (index == CC_PROB_FAIL) {
+    if (map->next != NULL) 
+      return cc_hashmap_find_inner(map->next, key);
+    return (lmn_data_t)-1;
+  }
+  lmn_data_t data = map->data[index]; 
+  //if (LMN_UNLIKELY(IS_TAGGED((lmn_word)data, TAG1))) {
+  if (LMN_UNLIKELY(data == CC_COPIED_VALUE)) {
+    data = cc_hashmap_find_inner(map->next, key);
+  }
+  //}
+  return data;
+}
+
 /*
  * public function
  */
-void cc_hashmap_init(cc_hashmap_t *map) {
-  cc_hashmap_init_inner(map, 1 << 18);
+
+void lmn_hashmap_init(lmn_hashmap_t *lmn_map) {
+  lmn_map->current = lmn_malloc(cc_hashmap_t);
+  cc_hashmap_init_inner(lmn_map->current, 1 << 20);
 }
 
-int cc_hashmap_count(cc_hashmap_t *map) {
+int lmn_hashmap_count(lmn_hashmap_t *lmn_map) {
+  cc_hashmap_t *map = lmn_map->current;
   static int thread_count = GetCurrentThreadCount();
   int count = 0;
   for (int i = 0; i < thread_count; i++) {
@@ -317,42 +344,30 @@ int cc_hashmap_count(cc_hashmap_t *map) {
   return count;
 }
 
-void cc_hashmap_free(cc_hashmap_t *map) {
+void lmn_hashmap_free(lmn_hashmap_t *lmn_map) {
+  cc_hashmap_t *map = lmn_map->current;
   lmn_free((void*)map->buckets);
   lmn_free((void*)map->data);
   if (map->count != NULL)
     lmn_free((void*)map->count);
 }
 
-lmn_data_t cc_hashmap_find(cc_hashmap_t *map, lmn_key_t key) {
-  lmn_word index = cc_hashmap_find_bucket(map, key);
-
-  if (LMN_UNLIKELY(index != CC_PROB_FAIL)) {
-    if (map->next != NULL) 
-      cc_hashmap_find(map->next, key);
-    return LMN_HASH_EMPTY_DATA;
-  }
-  lmn_data_t data = map->data[index]; 
-  //if (LMN_UNLIKELY(IS_TAGGED((lmn_word)data, TAG1))) {
-  if (LMN_UNLIKELY(data == CC_COPIED_VALUE)) {
-    data = cc_hashmap_find(map->next, key);
-  }
-  //}
-  return data;
+lmn_data_t lmn_hashmap_find(lmn_hashmap_t *lmn_map, lmn_key_t key) {
+  cc_hashmap_t *map = lmn_map->current;
+  cc_hashmap_find_inner(map, key);
 }
 
-void cc_hashmap_put(cc_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
+void lmn_hashmap_put(lmn_hashmap_t *lmn_map, lmn_key_t key, lmn_data_t data) {
+  cc_hashmap_t *map = lmn_map->current;
 
   if (LMN_UNLIKELY(map->next != NULL)) {
     int done = cc_hashmap_help_copy(map);
 
     // Unlink fully copied tables.
     if (done) {
-      cc_hashmap_print(map, 0);
       LMN_ASSERT(map->next);
-      if (LMN_CAS(&map, map, map->next)) {
-        printf("===========\n" );
-        cc_hashmap_print(map, 0);
+      if (LMN_CAS(&lmn_map->current, map, map->next)) {
+        cc_hashmap_print(lmn_map->current, 0);
       }
     }
   }

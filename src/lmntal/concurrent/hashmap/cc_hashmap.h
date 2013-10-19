@@ -20,17 +20,21 @@ typedef struct _cc_hashmap_t {
   lmn_data_t  volatile *data; // data index array
   lmn_word    volatile bucket_mask;
   int         volatile *count;
+  int         volatile copy;
   lmn_word    copy_scan;
   lmn_word    num_entries_copied;
   struct _cc_hashmap_t* volatile next;
 } cc_hashmap_t;
 
-inline lmn_word cc_hashmap_tbl_size(cc_hashmap_t *map) { return map->bucket_mask + 1; }
-void cc_hashmap_init(cc_hashmap_t *map);
-lmn_data_t cc_hashmap_find(cc_hashmap_t *map, lmn_key_t key);
-void cc_hashmap_put(cc_hashmap_t *map, lmn_key_t key, lmn_data_t data);
-void cc_hashmap_free(cc_hashmap_t *map);
-int cc_hashmap_count(cc_hashmap_t *map);
+typedef struct _lmn_hashmap_t {
+  cc_hashmap_t* current;
+} lmn_hashmap_t;
+
+void lmn_hashmap_init(lmn_hashmap_t *map);
+lmn_data_t lmn_hashmap_find(lmn_hashmap_t *map, lmn_key_t key);
+void lmn_hashmap_put(lmn_hashmap_t *map, lmn_key_t key, lmn_data_t data);
+void lmn_hashmap_free(lmn_hashmap_t *map);
+int lmn_hashmap_count(lmn_hashmap_t *map);
 
 }
 }
