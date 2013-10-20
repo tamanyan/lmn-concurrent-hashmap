@@ -26,6 +26,7 @@ typedef struct _cc_hashmap_t {
   lmn_word    copy_scan;
   lmn_word    num_entries_copied;
   struct _cc_hashmap_t* volatile next;
+  struct _cc_hashmap_t* volatile pool;
 } cc_hashmap_t;
 
 typedef struct _lmn_hashmap_t {

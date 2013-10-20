@@ -11,7 +11,7 @@ __thread int _thread_id = 0;
 namespace lmntal {
 namespace concurrent {
 
-int _thread_count = 0;
+int _thread_count = -1;
 __thread int _thread_id;
 
 int GetCurrentThreadId() {
@@ -23,7 +23,8 @@ int GetCurrentThreadCount() {
 }
 
 void* __Run(void *cthis) {
-  _thread_id = _thread_count++;
+  __sync_fetch_and_add(&_thread_count, 1);
+  _thread_id = _thread_count;
   static_cast<Runnable*>(cthis)->Run();
   return NULL;
 }

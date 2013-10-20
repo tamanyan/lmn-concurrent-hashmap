@@ -211,7 +211,7 @@ public:
         hashmap_put(map, rand_val, (lmn_data_t)rand_val);
         lmn_data_t val = hashmap_find(map, rand_val);
         if (val != (lmn_data_t)rand_val) {
-          LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u]%s\n",LMN_TERMINAL_RED, rand_val, val, LMN_TERMINAL_DEFAULT);
+          LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u] thread:%d%s\n",LMN_TERMINAL_RED, rand_val, val, GetCurrentThreadId(),LMN_TERMINAL_DEFAULT);
           LMN_ASSERT(val == (lmn_data_t)rand_val);
         }
       }
@@ -295,7 +295,7 @@ int main(int argc, char **argv){
     }
     LMN_DBG("start benchmark\n");
     int ops = 0;
-    int during = 100000;
+    int during = 30000;
     usleep(during);
     stop_ = 1;
     for (int i = 0; i < thread_num; i++) {
