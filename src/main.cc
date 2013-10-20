@@ -171,6 +171,7 @@ static int num_threads_;
 static volatile int start_, stop_, load_;
 static double load_time_;
 static int duration_;
+static int enter_;
 
 class HashMapTest : public Thread {
 private:
@@ -191,7 +192,7 @@ public:
     int section = (COUNT / HashMapTest::count);
     int offset  = section * id + 1; 
     init_genrand((unsigned)time(NULL));
-    //LMN_DBG_V("Enter section: %d \n",section);
+    LMN_DBG_V("Enter thread id:%d\n", id);
     do {} while(start_);
     //for (int i = offset; i < offset + section; i++) {
     //  //LMN_ASSERT(!(hashmap_find(map, i) == (lmn_data_t)i));
@@ -202,13 +203,12 @@ public:
     int rand_val = genrand_int32();
     while(stop_ == 0) {
       this->ops++;
-      for (int i = 0; i < 4000; i++)
-        rand_val = genrand_int32();
+      rand_val = genrand_int32();
       if (hashmap_find(map, rand_val) == (lmn_data_t)-1) {
         insert_count++;
-        //hashmap_put(map, rand_val, (lmn_data_t)rand_val);
+        hashmap_put(map, rand_val, (lmn_data_t)rand_val);
         //printf("insert :%d\n", hashmap_find(map, rand_val));
-        //LMN_ASSERT(hashmap_find(map, rand_val) != (lmn_data_t)-1);
+        LMN_ASSERT(hashmap_find(map, rand_val) != (lmn_data_t)-1);
       }
     }
     //LMN_DBG_V("End id: %d, insert_time:%d, ops:%d\n", id, insert_count, ops);
@@ -277,7 +277,8 @@ int main(int argc, char **argv){
     for (int i = 0; i < thread_num; i++) {
       threads[i].Start();
     }
-    usleep(500000);
+    sleep(3);
+    LMN_DBG("start benchmark\n");
     start_ = 1;
     int ops = 0;
     int during = 100000;
@@ -287,9 +288,8 @@ int main(int argc, char **argv){
       threads[i].Join();
       ops += threads[i].ops;
     }
-    printf("ops %d\n", ops);
     //printf("%lfs Mops/s %lf per-thread %lf\n", cpu_time, ((double)COUNT / cpu_time) / 1000000.0 , ((double)COUNT/cpu_time/thread_num) / 1000000.0);
-    printf("%lf s, %.3lf Mops/s,  per-thread %.3lf\n", ((double)during/U_SEC), ((double)ops / ((double)during/U_SEC)) / 1000000.0, ((double)ops / ((double)during/U_SEC)) / 1000000.0 / thread_num );
+    printf("%d thread, %lf s, %.3lf Mops/s, per-thread %.3lf\n", thread_num, ((double)during/U_SEC), ((double)ops / ((double)during/U_SEC)) / 1000000.0, ((double)ops / ((double)during/U_SEC)) / 1000000.0 / thread_num );
     //printf("%lfs Mops/s %lf per-thread %lf\n", during, ((double)ops/ during) / 1000000.0 , ((double)ops/during) / 1000000.0);
     hashmap_free(&map);
   }

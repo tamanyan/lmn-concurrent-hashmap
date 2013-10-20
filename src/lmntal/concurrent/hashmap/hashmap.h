@@ -15,8 +15,6 @@
 #include <assert.h>
 using namespace std;
 
-#define LMN_DEBUG
-
 #define LMN_CAS(a_ptr, a_old, a_new) __sync_bool_compare_and_swap(a_ptr, a_old, a_new)
 #define LMN_ATOMIC_ADD(ptr, v)       __sync_fetch_and_add(ptr, v)
 #define LMN_ATOMIC_SUB(ptr, v)       __sync_fetch_and_sub(ptr, v)
@@ -28,6 +26,7 @@ using namespace std;
 #define LMN_PREFETCH(addr, rw, locality) __builtin_prefetch(addr, rw, locality)
 
 #define LMN_PTR_VAL(ptr) (*ptr)
+
 
 #ifdef LMN_DEBUG
 #define LMN_DBG_V(fmt, ...) printf(fmt, __VA_ARGS__)
