@@ -27,6 +27,7 @@ using namespace std;
 
 #define LMN_PTR_VAL(ptr) (*ptr)
 
+#define LMN_DEBUG
 
 #ifdef LMN_DEBUG
 #define LMN_DBG_V(fmt, ...) printf(fmt, __VA_ARGS__)

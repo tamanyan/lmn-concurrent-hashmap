@@ -207,11 +207,14 @@ public:
       if (hashmap_find(map, rand_val) == (lmn_data_t)-1) {
         insert_count++;
         hashmap_put(map, rand_val, (lmn_data_t)rand_val);
-        //printf("insert :%d\n", hashmap_find(map, rand_val));
-        LMN_ASSERT(hashmap_find(map, rand_val) != (lmn_data_t)-1);
+        lmn_data_t val = hashmap_find(map, rand_val);
+        if (val != (lmn_data_t)rand_val) {
+          printf("insert :%d\n", val);
+          //LMN_ASSERT(hashmap_find(map, rand_val) != (lmn_data_t)-1);
+        }
       }
     }
-    //LMN_DBG_V("End id: %d, insert_time:%d, ops:%d\n", id, insert_count, ops);
+    LMN_DBG_V("End id: %d, insert_time:%d, ops:%d\n", id, insert_count, ops);
   }
 };
 

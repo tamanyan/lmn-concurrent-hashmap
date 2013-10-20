@@ -143,7 +143,6 @@ inline void cc_hashmap_init_inner(cc_hashmap_t *map, lmn_word scale) {
   map->copy_scan    = 0;
   map->copy         = 0;
   map->num_entries_copied = 0;
-  memset((void*)map->buckets, CC_DOES_NOT_EXIST, sizeof(lmn_key_t)*scale);
 }
 
 static void cc_hashmap_start_copy(cc_hashmap_t *map) {
@@ -283,7 +282,7 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
     cc_hashmap_inc_count(map);
   } else {
     // LMN_DBG("not empty\n");
-    return (lmn_data_t)-1;
+    return CC_DOES_NOT_EXIST;
   }
   /*lmn_word index = cc_hashmap_find_free_bucket(map, key);
 
@@ -314,14 +313,12 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
   if (index == CC_PROB_FAIL) {
     if (map->next != NULL) 
       return cc_hashmap_find_inner(map->next, key);
-    return (lmn_data_t)-1;
+    return CC_DOES_NOT_EXIST;
   }
   lmn_data_t data = map->data[index]; 
-  //if (LMN_UNLIKELY(IS_TAGGED((lmn_word)data, TAG1))) {
   if (LMN_UNLIKELY(data == CC_COPIED_VALUE)) {
     data = cc_hashmap_find_inner(map->next, key);
   }
-  //}
   return data;
 }
 
@@ -354,7 +351,7 @@ void lmn_hashmap_free(lmn_hashmap_t *lmn_map) {
 
 lmn_data_t lmn_hashmap_find(lmn_hashmap_t *lmn_map, lmn_key_t key) {
   cc_hashmap_t *map = lmn_map->current;
-  cc_hashmap_find_inner(map, key);
+  return cc_hashmap_find_inner(map, key);
 }
 
 void lmn_hashmap_put(lmn_hashmap_t *lmn_map, lmn_key_t key, lmn_data_t data) {

@@ -1,5 +1,4 @@
 #!/bin/bash
-
 autoreconf -i
 ./configure --enable-tcmalloc
 cd src/third_party/
@@ -16,3 +15,4 @@ echo "DYLD_LIBRARY_PATH=${BASE_DIR}/src/third_party/gperftools-2.1/.libs"
 export LD_PRELOAD="${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"
 echo "LD_PRELOAD=${BASE_DIR}/src/third_party/gperftools-2.1/.libs/libtcmalloc_minimal.so.4"
 exit
+
