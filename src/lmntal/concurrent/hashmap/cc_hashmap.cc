@@ -23,7 +23,6 @@ using namespace lmntal::concurrent;
 #define CC_CACHE_LINE_SIZE_FOR_UNIT64 8
 #define CC_ENTRIES_PER_COPY_CHUNK 16
 #define CC_PROB_FAIL -1
-#define CC_DOES_NOT_EXIST 0  // 000000...
 #define CC_COPIED_VALUE ((lmn_data_t)(TAG_VALUE(CC_DOES_NOT_EXIST, TAG1))) // 100000...
 #define THRESHOLD 3
 
@@ -199,7 +198,7 @@ static int cc_hashmap_copy_entry(cc_hashmap_t *original, lmn_word index, lmn_wor
 
   if (rep_is_empty) {
     if (!LMN_CAS(&replica->buckets[rep_index], CC_DOES_NOT_EXIST, LMN_PTR_VAL(org_key))) {
-      //printf("retry copy entry\n");
+      LMN_DBG("retry copy entry\n");
       return cc_hashmap_copy_entry(original, index, key_hash, replica); // retry recursive tail-call
     }
   }
@@ -245,7 +244,7 @@ static int cc_hashmap_help_copy(cc_hashmap_t *map) {
       x = 0;
       limit = cc_hashmap_tbl_size(map);
     }
-    //printf("limit : %d, copy_scan:%d\n", limit, hti->copy_scan);
+    // LMN_DBG("limit : %d, copy_scan:%d\n", limit, map->copy_scan);
 
     //printf("x:%d, tbl_size:%d\n", x, cc_hashmap_tbl_size(map));
     // Copy the entries
@@ -274,10 +273,11 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
   }
 
   if (is_empty) {
-    if (!LMN_CAS(&map->buckets[index], CC_DOES_NOT_EXIST, data)) {
+    if (!LMN_CAS(&map->buckets[index], CC_DOES_NOT_EXIST, key)) {
       return cc_hashmap_put_inner(map, key, data); // retry
     }
     map->data[index] = data;
+    LMN_LOG("[debug] cc_hashmap_put_inner: put entry {%u, %u, %u}\n", index, key, data);
     //LMN_CAS(&(map->size), map->size, map->size + 1);
     cc_hashmap_inc_count(map);
   } else {
@@ -311,15 +311,21 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
   lmn_word index = cc_hashmap_find_bucket(map, key);
 
   if (index == CC_PROB_FAIL) {
+    LMN_LOG("[debug log] cc_hashmap_find_inner prob fail {??, %u, ??}\n", key);
     if (map->next != NULL) 
       return cc_hashmap_find_inner(map->next, key);
     return CC_DOES_NOT_EXIST;
   }
-  lmn_data_t data = map->data[index]; 
-  if (LMN_UNLIKELY(data == CC_COPIED_VALUE)) {
-    data = cc_hashmap_find_inner(map->next, key);
+  volatile lmn_data_t* data = &map->data[index];
+  if (LMN_UNLIKELY(LMN_PTR_VAL(data) == CC_COPIED_VALUE)) {
+    lmn_data_t ret = cc_hashmap_find_inner(map->next, key);
+    return ret;
+  } else if (LMN_PTR_VAL(data) == CC_DOES_NOT_EXIST) {
+    LMN_LOG("[debug log] cc_hashmap_find_inner: partially put {%u, %u, %u}\n", index, key, LMN_PTR_VAL(data));
+    return cc_hashmap_find_inner(map, key);
   }
-  return data;
+  LMN_LOG("[debug] cc_hashmap_find_inner: find entry {%u, %u, %u}\n", index, key, LMN_PTR_VAL(data));
+  return LMN_PTR_VAL(data);
 }
 
 /*
@@ -328,7 +334,7 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
 
 void lmn_hashmap_init(lmn_hashmap_t *lmn_map) {
   lmn_map->current = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_init_inner(lmn_map->current, 1 << 25);
+  cc_hashmap_init_inner(lmn_map->current, 1 << 23);
 }
 
 int lmn_hashmap_count(lmn_hashmap_t *lmn_map) {
@@ -347,6 +353,7 @@ void lmn_hashmap_free(lmn_hashmap_t *lmn_map) {
   lmn_free((void*)map->data);
   if (map->count != NULL)
     lmn_free((void*)map->count);
+  lmn_free(map);
 }
 
 lmn_data_t lmn_hashmap_find(lmn_hashmap_t *lmn_map, lmn_key_t key) {
@@ -364,6 +371,8 @@ void lmn_hashmap_put(lmn_hashmap_t *lmn_map, lmn_key_t key, lmn_data_t data) {
     if (done) {
       LMN_ASSERT(map->next);
       if (LMN_CAS(&lmn_map->current, map, map->next)) {
+        LMN_DBG("[debug] copy finished\n");
+        map = map->next;
         cc_hashmap_print(lmn_map->current, 0);
       }
     }

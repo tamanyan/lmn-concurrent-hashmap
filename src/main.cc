@@ -172,6 +172,7 @@ static volatile int start_, stop_, load_;
 static double load_time_;
 static int duration_;
 static int enter_;
+static pthread_mutex_t mutex[100];
 
 class HashMapTest : public Thread {
 private:
@@ -192,29 +193,36 @@ public:
     int section = (COUNT / HashMapTest::count);
     int offset  = section * id + 1; 
     init_genrand((unsigned)time(NULL));
-    LMN_DBG_V("Enter thread id:%d\n", id);
-    do {} while(start_);
+    LMN_DBG("Enter thread id:%d\n", id);
+    pthread_mutex_lock(&mutex[id]);
     //for (int i = offset; i < offset + section; i++) {
     //  //LMN_ASSERT(!(hashmap_find(map, i) == (lmn_data_t)i));
     //  if (!(hashmap_find(map, i) == (lmn_data_t)i)) {
     //  }
     //}
     int insert_count = 0;
-    int rand_val = genrand_int32();
+    unsigned long rand_val = genrand_int32();
     while(stop_ == 0) {
       this->ops++;
-      rand_val = genrand_int32();
-      if (hashmap_find(map, rand_val) == (lmn_data_t)-1) {
+      rand_val = genrand_int32() + 1;
+      //rand_val = this->ops;
+      if (hashmap_find(map, rand_val) == CC_DOES_NOT_EXIST) {
         insert_count++;
         hashmap_put(map, rand_val, (lmn_data_t)rand_val);
         lmn_data_t val = hashmap_find(map, rand_val);
         if (val != (lmn_data_t)rand_val) {
-          printf("insert :%d\n", val);
-          //LMN_ASSERT(hashmap_find(map, rand_val) != (lmn_data_t)-1);
+          LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u]%s\n",LMN_TERMINAL_RED, rand_val, val, LMN_TERMINAL_DEFAULT);
+          LMN_ASSERT(val == (lmn_data_t)rand_val);
         }
       }
     }
-    LMN_DBG_V("End id: %d, insert_time:%d, ops:%d\n", id, insert_count, ops);
+    //for (int i = 1; i < this->ops; i++) {
+    //  lmn_data_t val = hashmap_find(map, i);
+    //  if (val != ((lmn_data_t)i)) {
+    //      LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u]%s\n",LMN_TERMINAL_RED, rand_val, val, LMN_TERMINAL_DEFAULT);
+    //  }
+    //}
+    LMN_DBG("End id: %d, insert_count:%d, ops:%d\n", id, insert_count, ops);
   }
 };
 
@@ -275,14 +283,17 @@ int main(int argc, char **argv){
     HashMapTest *threads = new HashMapTest[thread_num];
     for (int i = 0; i < thread_num; i++) {
       threads[i].initialize(&map);
+      pthread_mutex_init(&mutex[i], NULL);
+      pthread_mutex_lock(&mutex[i]);
     }
-    start_ = 0;
     for (int i = 0; i < thread_num; i++) {
       threads[i].Start();
     }
     sleep(3);
+    for (int i = 0; i < thread_num; i++) {
+      pthread_mutex_unlock(&mutex[i]);
+    }
     LMN_DBG("start benchmark\n");
-    start_ = 1;
     int ops = 0;
     int during = 100000;
     usleep(during);

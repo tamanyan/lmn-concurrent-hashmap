@@ -29,14 +29,29 @@ using namespace std;
 
 #define LMN_DEBUG
 
+#define LMN_TERMINAL_RED "\x1b[31m"
+#define LMN_TERMINAL_GREEN "\x1b[32m"
+#define LMN_TERMINAL_YELLOW "\x1b[33m"
+#define LMN_TERMINAL_DEFAULT "\x1b[39m"
+
 #ifdef LMN_DEBUG
-#define LMN_DBG_V(fmt, ...) printf(fmt, __VA_ARGS__)
-#define LMN_DBG(fmt) printf(fmt)
+#define LMN_DBG_V(...) printf(__VA_ARGS__)
+#define LMN_DBG(...) printf(__VA_ARGS__)
+#define LMN_SWITCH_COLOR(color) LMN_DBG(color)
 #define LMN_ASSERT(expr) assert(expr);
 #else
 #define LMN_ASSERT(expr) (NULL)
-#define LMN_DBG_V(fmt, ...) (NULL)
-#define LMN_DBG(fmt, ...) (NULL) 
+#define LMN_DBG_V(...) (NULL)
+#define LMN_DBG(...) (NULL) 
+#define LMN_SWITCH_COLOR (NULL)
+#endif
+
+//#define LMN_LOG
+
+#ifdef LMN_LOG
+#define LMN_LOG(...) LMN_DBG(__VA_ARGS__)
+#else
+#define LMN_LOG(...) (NULL)
 #endif
 
 #define FALSE 0

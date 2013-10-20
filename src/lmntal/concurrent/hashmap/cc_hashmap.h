@@ -15,6 +15,8 @@ namespace lmntal {
 namespace concurrent {
 namespace hashmap {
 
+#define CC_DOES_NOT_EXIST 0  // 000000...
+
 typedef struct _cc_hashmap_t {
   lmn_key_t   volatile *buckets; // key index array
   lmn_data_t  volatile *data; // data index array
