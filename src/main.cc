@@ -204,8 +204,8 @@ public:
     unsigned long rand_val = genrand_int32();
     while(stop_ == 0) {
       this->ops++;
-      rand_val = genrand_int32() + 1;
-      //rand_val = this->ops;
+      //rand_val = genrand_int32() + 1;
+      rand_val = this->ops;
       if (hashmap_find(map, rand_val) == CC_DOES_NOT_EXIST) {
         insert_count++;
         hashmap_put(map, rand_val, (lmn_data_t)rand_val);
@@ -216,12 +216,12 @@ public:
         }
       }
     }
-    //for (int i = 1; i < this->ops; i++) {
-    //  lmn_data_t val = hashmap_find(map, i);
-    //  if (val != ((lmn_data_t)i)) {
-    //      LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u]%s\n",LMN_TERMINAL_RED, rand_val, val, LMN_TERMINAL_DEFAULT);
-    //  }
-    //}
+    for (int i = 1; i < this->ops; i++) {
+      lmn_data_t val = hashmap_find(map, i);
+      if (val != ((lmn_data_t)i)) {
+          LMN_DBG("%s[worker thread] insert fail [expected:%u] [real:%u]%s\n",LMN_TERMINAL_RED, rand_val, val, LMN_TERMINAL_DEFAULT);
+      }
+    }
     LMN_DBG("End id: %d, insert_count:%d, ops:%d\n", id, insert_count, ops);
   }
 };
@@ -295,7 +295,7 @@ int main(int argc, char **argv){
     }
     LMN_DBG("start benchmark\n");
     int ops = 0;
-    int during = 30000;
+    int during = 2000000;
     usleep(during);
     stop_ = 1;
     for (int i = 0; i < thread_num; i++) {

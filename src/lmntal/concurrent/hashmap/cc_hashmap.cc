@@ -27,6 +27,8 @@ using namespace lmntal::concurrent;
 #define CC_COPIED_VALUE ((lmn_data_t)(TAG_VALUE(CC_DOES_NOT_EXIST, TAG1))) // 100000...
 #define THRESHOLD 3
 
+#define CC_NEXT_SCALE(map) ((cc_hashmap_tbl_size(map) < (1 << 20)) ? (cc_hashmap_tbl_size(map) << 3) : (cc_hashmap_tbl_size(map) << 1))
+
 int call_count = 0;
 int prob_count = 0;
 
@@ -150,7 +152,7 @@ inline void cc_hashmap_pool_init(cc_hashmap_t *map, lmn_word scale) {
 }
 
 inline void cc_hashmap_pool_enable(cc_hashmap_t *pool) {
-  cc_hashmap_pool_init(pool->pool, (pool->bucket_mask + 1) << 1);
+  cc_hashmap_pool_init(pool->pool, CC_NEXT_SCALE(pool));
 }
 
 inline void cc_hashmap_init_inner(cc_hashmap_t *map, lmn_word scale) {
@@ -161,7 +163,8 @@ inline void cc_hashmap_init_inner(cc_hashmap_t *map, lmn_word scale) {
   map->copy_scan    = 0;
   map->copy         = 0;
   map->pool         = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_pool_init(map->pool, (map->bucket_mask + 1) << 1);
+  //cc_hashmap_pool_init(map->pool, (map->bucket_mask + 1) << 2);
+  cc_hashmap_pool_init(map->pool, CC_NEXT_SCALE(map));
   map->num_entries_copied = 0;
 }
 
@@ -170,7 +173,10 @@ static void cc_hashmap_start_copy(cc_hashmap_t *map) {
   if (LMN_CAS(&map->next, NULL, map->pool)) {
     cc_hashmap_pool_enable(map->pool);
     map->pool = NULL;
-    LMN_DBG("[debug] cc_hashmap_start_copy: start to copy\n");
+    LMN_DBG("%s[debug] cc_hashmap_start_copy: start to copy, current:%d,next:%d %s\n", 
+        LMN_TERMINAL_GREEN,
+        cc_hashmap_tbl_size(map), cc_hashmap_tbl_size(map->next), 
+        LMN_TERMINAL_DEFAULT);
   }
   //}
 }
@@ -283,6 +289,7 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
   lmn_word index = cc_hashmap_lookup(map, key, &is_empty);
 
   if (LMN_UNLIKELY(index == CC_PROB_FAIL)) {
+    LMN_DBG("[debug] cc_hashmap_put_inner: prob fail, current:%d, next:%p\n", cc_hashmap_tbl_size(map), map->next);
     if (map->next == NULL) {
       cc_hashmap_start_copy(map);
     }
@@ -295,11 +302,12 @@ lmn_data_t cc_hashmap_put_inner(cc_hashmap_t *map, lmn_key_t key, lmn_data_t dat
       return cc_hashmap_put_inner(map, key, data); // retry
     }
     map->data[index] = data;
-    LMN_DBG("[debug] cc_hashmap_put_inner: put entry {%u, %u, %u} thread:%d\n", index, key, data, GetCurrentThreadId());
+    //LMN_DBG("[debug] cc_hashmap_put_inner: put entry {%u, %u, %u} thread:%d\n", index, key, data, GetCurrentThreadId());
     //LMN_CAS(&(map->size), map->size, map->size + 1);
     cc_hashmap_inc_count(map);
   } else {
     // entry is immutable
+    //LMN_DBG("[debug] cc_hashmap_put_inner: Immutable value {%u, %u, %u} thread:%d\n", index, key, data, GetCurrentThreadId());
     return CC_IMMUTABLE_FAIL;
   }
   return data;
@@ -332,7 +340,7 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
 
 void lmn_hashmap_init(lmn_hashmap_t *lmn_map) {
   lmn_map->current = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_init_inner(lmn_map->current, 1 << 10);
+  cc_hashmap_init_inner(lmn_map->current, 1 << 12);
 }
 
 int lmn_hashmap_count(lmn_hashmap_t *lmn_map) {
@@ -368,9 +376,8 @@ void lmn_hashmap_put(lmn_hashmap_t *lmn_map, lmn_key_t key, lmn_data_t data) {
     if (done) {
       LMN_ASSERT(map->next);
       if (LMN_CAS(&lmn_map->current, map, map->next)) {
-        LMN_DBG("[debug] copy finished\n");
+        LMN_DBG("%s[debug] lmn_hashmap_put copy finished new_map_size:%d%s\n", LMN_TERMINAL_GREEN, cc_hashmap_tbl_size(lmn_map->current), LMN_TERMINAL_DEFAULT);
         map = map->next;
-        cc_hashmap_print(lmn_map->current, 0);
       }
     }
   }
