@@ -1,6 +1,7 @@
 noinst_LIBRARIES = liblmn_concurrent.a
 
 liblmn_concurrent_a_CFLAGS = $(CFLAGS) -I ./hashmap
+liblmn_concurrent_a_CXXFLAGS = $(CXXFLAG) -fpermissive
 
 liblmn_concurrent_a_SOURCES = \
 							 thread.cc thread.h \

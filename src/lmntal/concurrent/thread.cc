@@ -6,20 +6,19 @@
 #include "thread.h"
 #include <stdio.h>
 
-__thread int _thread_id = 0;
 
 namespace lmntal {
 namespace concurrent {
 
 int _thread_count = -1;
-__thread int _thread_id;
+__thread int _thread_id = 0;
 
 int GetCurrentThreadId() {
   return _thread_id;
 }
 
 int GetCurrentThreadCount() {
-  return _thread_count;
+  return _thread_count + 1;
 }
 
 void* __Run(void *cthis) {

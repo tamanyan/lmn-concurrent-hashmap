@@ -2,7 +2,7 @@ SUBDIRS = map lmntal/concurrent
 
 bin_PROGRAMS = benchmark
 
-benchmark_CFLAGS = $(CFLAG) -std=c99 -Wall
+benchmark_CFLAGS = $(CFLAG) -std=c99 -Wall -fpermissive
 benchmark_LDFLAGS = -L./map  -L./lmntal/concurrent
 benchmark_DEPENDENCIES = ./map/liblmn_map.a ./lmntal/concurrent/liblmn_concurrent.a 
 
