@@ -27,7 +27,7 @@ using namespace std;
 
 #define LMN_PTR_VAL(ptr) (*ptr)
 
-// #define LMN_DEBUG
+#define LMN_DEBUG
 
 #define LMN_TERMINAL_RED "\x1b[31m"
 #define LMN_TERMINAL_GREEN "\x1b[32m"

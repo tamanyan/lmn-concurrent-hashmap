@@ -37,8 +37,8 @@ int prob_count = 0;
 __thread int count = 0;
 
 inline void cc_hashmap_inc_count(cc_hashmap_t *map) {
-  count++;
-  //map->count[GetCurrentThreadId()]++;
+  //LMN_ATOMIC_ADD(&count, 1);
+  map->count[GetCurrentThreadId()]++;
 }
 
 inline lmn_word cc_hashmap_tbl_size(cc_hashmap_t *map) { return map->bucket_mask + 1; }
@@ -145,6 +145,7 @@ inline void cc_hashmap_pool_init(cc_hashmap_t *map, lmn_word scale) {
   map->copy_scan    = 0;
   map->copy         = 0;
   map->num_entries_copied = 0;
+  map->count        = lmn_calloc(int, 100);
   map->pool         = lmn_malloc(cc_hashmap_t);
 }
 
@@ -153,11 +154,10 @@ inline void cc_hashmap_pool_enable(cc_hashmap_t *pool) {
 }
 
 inline void cc_hashmap_init_inner(cc_hashmap_t *map, lmn_word scale) {
-  static int thread_count = GetCurrentThreadCount();
   map->buckets      = lmn_calloc(lmn_key_t,  scale);
   map->data         = lmn_calloc(lmn_data_t, scale);
   map->bucket_mask  = scale - 1;
-  map->count        = lmn_calloc(int, thread_count);
+  map->count        = lmn_calloc(int, 100);
   map->copy_scan    = 0;
   map->copy         = 0;
   map->pool         = lmn_malloc(cc_hashmap_t);
@@ -332,7 +332,7 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
 
 void lmn_hashmap_init(lmn_hashmap_t *lmn_map) {
   lmn_map->current = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_init_inner(lmn_map->current, 1 << 20);
+  cc_hashmap_init_inner(lmn_map->current, 1 << 10);
 }
 
 int lmn_hashmap_count(lmn_hashmap_t *lmn_map) {
