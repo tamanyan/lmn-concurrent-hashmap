@@ -1,7 +1,7 @@
 Lmn-concurrent-hashmap
 ===========
 
-C library of concurrent hashmaps with high performance for parallel model checking
+C/C++ library of concurrent hashmaps with high performance for parallel model checking
 
 ## Requirements
     
@@ -18,11 +18,16 @@ C library of concurrent hashmaps with high performance for parallel model checki
 
 ## Contents
 
-1. Lock Based ChainHash (Close Addressing)
-2. Lock Free ChainHash (Close Addressing)
-3. Lock Based ClosedHash (Open Addressing)
-4. Lock Free ClosedHash (Open Addressing)
+1. Fine-Grained Lock ChainHash
+2. Cliff Click HashMap for Model Checking
+3. Split Orderd Linked List for Model Checking
 
 ## How to use
      
-     $ ./benchmark [-a algorithm_name] [-c insert_count] [-n number_of_thread] 
+     $ ./benchmark [-a algorithm_name] [-n number_of_thread] [-t time]
+
+## Thanks for the URL
+- http://www.stanford.edu/class/ee380/Abstracts/070221_LockFreeHash.pdf 
+- https://code.google.com/p/nbds/
+- http://www.cs.ucf.edu/~dcm/Teaching/COT4810-Spring2011/Literature/SplitOrderedLists.pdf
+- https://github.com/kumpera/Lock-free-hastable
