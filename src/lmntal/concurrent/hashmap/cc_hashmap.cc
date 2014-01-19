@@ -400,7 +400,7 @@ lmn_data_t cc_hashmap_find_inner(cc_hashmap_t *map, lmn_key_t key) {
 
 void lmn_hashmap_init(lmn_hashmap_t *lmn_map) {
   lmn_map->current = lmn_malloc(cc_hashmap_t);
-  cc_hashmap_init_inner(lmn_map->current, 1 << 20);
+  cc_hashmap_init_inner(lmn_map->current, LMN_DEFAULT_SIZE);
 }
 
 int lmn_hashmap_count(lmn_hashmap_t *lmn_map) {

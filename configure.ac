@@ -60,6 +60,5 @@ fi
 # Checks for library functions.
 
 AC_OUTPUT(Makefile \
-          src/map/Makefile
           src/lmntal/concurrent/Makefile
           src/Makefile)

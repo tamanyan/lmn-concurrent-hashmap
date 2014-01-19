@@ -1,6 +1,6 @@
 #!/bin/bash
-autoreconf -i
-./configure --enable-tcmalloc
+#autoreconf -i
+#./configure --enable-tcmalloc
 cd src/third_party/
 unzip gperftools-2.1.zip
 cd gperftools-2.1/
