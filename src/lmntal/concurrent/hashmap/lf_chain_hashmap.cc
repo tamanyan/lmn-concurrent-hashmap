@@ -4,6 +4,7 @@
  * @author Taketo Yoshida
  */
 #include "lf_chain_hashmap.h"
+#include "../thread.h"
 
 namespace lmntal {
 namespace concurrent {
@@ -44,15 +45,17 @@ void lf_chain_put(chain_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
 
   if ((*ent) == LMN_HASH_EMPTY) {
     chain_entry_t *tmp, *new_ent = NULL;
-    do {
-      tmp = *ent;
-      if (new_ent == NULL) {
-        new_ent = (chain_entry_t*)malloc(sizeof(chain_entry_t));
-        new_ent->next = NULL;
-      } else {
-        new_ent->next = (*ent);
+    tmp = *ent;
+    if (new_ent == NULL) {
+      new_ent = (chain_entry_t*)malloc(sizeof(chain_entry_t));
+      new_ent->next = NULL;
+      if(!LMN_CAS(&(*ent), NULL, new_ent)) {
+        if (new_ent == NULL) free(new_ent);
+        return lf_chain_put(map, key, data);
       }
-    } while(!LMN_CAS(&(*ent), tmp, new_ent));
+    } else {
+      return lf_chain_put(map, key, data);
+    }
   } else {
     chain_entry_t *cur, *tmp, *new_ent = NULL;
     cur = *ent;
@@ -64,6 +67,7 @@ void lf_chain_put(chain_hashmap_t *map, lmn_key_t key, lmn_data_t data) {
           if (new_ent == NULL) free(new_ent);
           return;
         }
+        //LMN_DBG("[debug] cc_hashmap_put_inner: retry hash, key %u, thread:%d\n", key, GetCurrentThreadId());
         //printf("%p ", cur->next);
       } while(cur->next != LMN_HASH_EMPTY && (cur = cur->next));
       if (new_ent == NULL)

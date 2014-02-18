@@ -66,7 +66,7 @@ using namespace std;
 #define LMN_DEFAULT_SIZE (1 << 28)
 //#define LMN_DEFAULT_SIZE    1024 * 32
 
-typedef unsigned long lmn_word;
+typedef size_t lmn_word;
 typedef lmn_word lmn_key_t;
 typedef void*    lmn_data_t;
 typedef void*    lmn_map_t;
