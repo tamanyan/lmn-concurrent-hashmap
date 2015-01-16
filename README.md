@@ -20,7 +20,6 @@ C/C++ library of concurrent hashmaps with high performance for parallel model ch
 
 1. Fine-Grained Lock ChainHash
 2. Cliff Click HashMap for Model Checking
-3. Split Orderd Linked List for Model Checking
 
 ## How to use
      
